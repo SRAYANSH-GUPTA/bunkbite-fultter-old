@@ -6,12 +6,14 @@ import '../core/constants.dart';
 import '../core/storage_service.dart';
 import '../models/order_model.dart';
 import '../models/canteen_model.dart';
+import '../models/menu_item_model.dart';
 
 class OwnerState {
   final bool isLoading;
   final List<OrderModel> orders;
   final List<Canteen> myCanteens;
   final Canteen? selectedCanteen;
+  final List<MenuItem> menu; // Add menu for selected canteen
   final Map<String, dynamic>? analyticsData;
   final String? error;
 
@@ -20,6 +22,7 @@ class OwnerState {
     this.orders = const [],
     this.myCanteens = const [],
     this.selectedCanteen,
+    this.menu = const [],
     this.analyticsData,
     this.error,
   });
@@ -29,6 +32,7 @@ class OwnerState {
     List<OrderModel>? orders,
     List<Canteen>? myCanteens,
     Canteen? selectedCanteen,
+    List<MenuItem>? menu,
     String? error,
     Map<String, dynamic>? analyticsData,
   }) {
@@ -37,6 +41,7 @@ class OwnerState {
       orders: orders ?? this.orders,
       myCanteens: myCanteens ?? this.myCanteens,
       selectedCanteen: selectedCanteen ?? this.selectedCanteen,
+      menu: menu ?? this.menu,
       analyticsData: analyticsData ?? this.analyticsData,
       error: error,
     );
@@ -49,8 +54,16 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
   OwnerNotifier(this._apiService) : super(OwnerState());
 
   void selectCanteen(Canteen canteen) {
-    state = state.copyWith(selectedCanteen: canteen);
+    // Immediately clear old data to prevent showing stale info
+    state = state.copyWith(
+      selectedCanteen: canteen,
+      menu: [], // Clear menu immediately
+      orders: [], // Clear orders immediately
+    );
+
+    // Then fetch fresh data
     fetchCanteenOrders(canteen.id);
+    fetchCanteenMenu(canteen.id);
   }
 
   Future<void> fetchMyCanteens() async {
@@ -231,6 +244,77 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
     } catch (e) {
       state = state.copyWith(error: e.toString());
       rethrow;
+    }
+  }
+
+  // Fetch menu for selected canteen
+  Future<void> fetchCanteenMenu(String canteenId) async {
+    try {
+      final response = await _apiService.client.get('/menu/canteen/$canteenId');
+      final List data = response.data['data'] ?? [];
+      final menu = data.map((e) => MenuItem.fromJson(e)).toList();
+      state = state.copyWith(menu: menu);
+    } catch (e) {
+      print('Error fetching menu: $e');
+      state = state.copyWith(menu: []);
+    }
+  }
+
+  // Delete canteen
+  Future<bool> deleteCanteen(String canteenId) async {
+    try {
+      await _apiService.client.delete('/canteens/$canteenId');
+      await fetchMyCanteens();
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  // Delete menu item
+  Future<bool> deleteMenuItem(String canteenId, String itemId) async {
+    try {
+      await _apiService.client.delete('/menu/canteen/$canteenId/item/$itemId');
+      await fetchCanteenMenu(canteenId);
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  // Add menu item
+  Future<bool> addMenuItem(
+    String canteenId,
+    Map<String, dynamic> itemData,
+  ) async {
+    try {
+      await _apiService.client.post('/menu/canteen/$canteenId', data: itemData);
+      await fetchCanteenMenu(canteenId);
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  // Update menu item
+  Future<bool> updateMenuItem(
+    String canteenId,
+    String itemId,
+    Map<String, dynamic> itemData,
+  ) async {
+    try {
+      await _apiService.client.put(
+        '/menu/canteen/$canteenId/item/$itemId',
+        data: itemData,
+      );
+      await fetchCanteenMenu(canteenId);
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
     }
   }
 }

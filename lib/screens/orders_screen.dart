@@ -78,29 +78,26 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
     final ordersState = ref.watch(ordersProvider);
 
-    // Filter logic: Show Paid, Completed, Ready, Preparing. Hide 'pending' (unpaid) unless specifically requested?
-    // User requested "just show paid or completed orders".
-    // So we strictly filter out 'pending' (which usually means payment not initiated or failed).
+    // Filter logic
     final displayedOrders = ordersState.orders.where((order) {
-      // STRICT FILTER: Hide 'pending' orders entirely unless they are Paid.
-      // If paymentStatus is success, show it.
-      // If paymentStatus is pending/failed AND status is pending, HIDE it.
-      // If status is preparing/ready/completed, SHOW it (implies paid or COD/accepted).
-
-      bool isPaid = order.paymentStatus == 'success';
+      bool isPaid =
+          order.paymentStatus == 'success' ||
+          order.paymentStatus == 'completed';
       bool isActive = [
         'preparing',
         'ready',
         'completed',
       ].contains(order.status);
 
-      // If it's pending/failed payment AND status is pending -> HIDE
+      // Hide unpaid pending orders
       if (!isPaid && !isActive) return false;
 
       if (_filter == 'All') return true;
 
       if (_filter == 'Paid') {
-        return isPaid || isActive;
+        // Only show paid orders that are NOT completed
+        // (preparing, ready, or any paid order that's not completed)
+        return isPaid && order.status != 'completed';
       }
 
       if (_filter == 'Completed') return order.status == 'completed';

@@ -242,6 +242,32 @@ class _OwnerCanteenSettingsViewState
                       ),
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // Delete Canteen Button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: OutlinedButton.icon(
+                onPressed: _deleteCanteen,
+                icon: const Icon(Icons.delete_outline),
+                label: Text(
+                  'Delete Canteen',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -285,5 +311,51 @@ class _OwnerCanteenSettingsViewState
         ),
       ),
     );
+  }
+
+  Future<void> _deleteCanteen() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Canteen?'),
+        content: Text(
+          'Are you sure you want to delete "${widget.canteen.name}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final success = await ref
+          .read(ownerProvider.notifier)
+          .deleteCanteen(widget.canteen.id);
+
+      if (success && mounted) {
+        Navigator.pop(context); // Go back after deletion
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Canteen deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete canteen'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

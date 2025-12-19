@@ -33,6 +33,17 @@ class CartNotifier extends StateNotifier<CartState> {
     }
 
     final currentItems = Map<String, OrderLineItem>.from(state.items);
+
+    // Check current quantity in cart
+    final currentQuantity = currentItems.containsKey(item.id)
+        ? currentItems[item.id]!.quantity
+        : 0;
+
+    // Validate: Don't allow adding more than available
+    if (currentQuantity >= item.availableQuantity) {
+      return; // Silently fail - UI should handle this
+    }
+
     if (currentItems.containsKey(item.id)) {
       final existing = currentItems[item.id]!;
       currentItems[item.id] = OrderLineItem(

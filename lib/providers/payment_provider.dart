@@ -2,12 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:dio/dio.dart';
 import '../core/api_service.dart';
 import '../models/order_model.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/orders_provider.dart';
 import '../screens/order_details_screen.dart';
+import '../widgets/error_dialog.dart';
+
+// Helper function to get user-friendly error messages
+String _getUserFriendlyError(dynamic error) {
+  if (error is DioException) {
+    if (error.response?.statusCode == 404) {
+      return 'Service not available. Please try again later.';
+    } else if (error.response?.statusCode == 400) {
+      final message =
+          error.response?.data['message'] ?? error.response?.data['error'];
+      if (message != null &&
+          message.toString().toLowerCase().contains('closed')) {
+        return 'Canteen is currently closed. Please try again during operating hours.';
+      }
+      return message?.toString() ??
+          'Invalid request. Please check your order and try again.';
+    } else if (error.response?.statusCode == 401) {
+      return 'Please login again to continue.';
+    } else if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      return 'Connection timeout. Please check your internet and try again.';
+    } else if (error.type == DioExceptionType.connectionError) {
+      return 'No internet connection. Please check your network.';
+    }
+    return error.response?.data['message']?.toString() ??
+        error.response?.data['error']?.toString() ??
+        'Something went wrong. Please try again.';
+  }
+  return 'An unexpected error occurred. Please try again.';
+}
 
 class PaymentState {
   final bool isLoading;
@@ -127,10 +158,11 @@ class PaymentController extends StateNotifier<PaymentState> {
       _razorpay.open(options);
     } catch (e) {
       print('DEBUG: Payment Exception: $e');
-      state = PaymentState(isLoading: false, error: e.toString());
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Checkout Failed: $e')));
+      final friendlyError = _getUserFriendlyError(e);
+      state = PaymentState(isLoading: false, error: friendlyError);
+      if (context.mounted) {
+        ErrorDialog.show(context, friendlyError, title: 'Checkout Failed');
+      }
     }
   }
 
@@ -185,12 +217,12 @@ class PaymentController extends StateNotifier<PaymentState> {
       }
     } catch (e) {
       print('ERROR: Payment verification failed: $e');
+      final friendlyError = _getUserFriendlyError(e);
       if (_context != null && _context!.mounted) {
-        ScaffoldMessenger.of(_context!).showSnackBar(
-          SnackBar(
-            content: Text('Payment verification failed: $e'),
-            backgroundColor: Colors.red,
-          ),
+        ErrorDialog.show(
+          _context!,
+          friendlyError,
+          title: 'Payment Verification Failed',
         );
       }
     }
@@ -199,15 +231,14 @@ class PaymentController extends StateNotifier<PaymentState> {
   void _handlePaymentError(PaymentFailureResponse response) {
     state = PaymentState(
       isLoading: false,
-      error: 'Payment Failed: ${response.message}',
+      error: 'Payment Failed: ${response.message ?? "Payment was cancelled"}',
     );
     if (_context != null && _context!.mounted) {
-      ScaffoldMessenger.of(_context!).showSnackBar(
-        SnackBar(
-          content: Text('Payment Failed: ${response.message}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      final errorMessage = response.message?.isNotEmpty == true
+          ? response.message!
+          : 'Payment was cancelled or failed. Please try again.';
+
+      ErrorDialog.show(_context!, errorMessage, title: 'Payment Failed');
     }
   }
 

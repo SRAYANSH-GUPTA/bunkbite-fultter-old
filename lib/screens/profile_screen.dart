@@ -57,28 +57,20 @@ class ProfileScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Avatar
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: const Color(0x1AF62F56),
-              child: Text(
-                user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                style: GoogleFonts.urbanist(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFFF62F56),
-                ),
+            // Large Profile Icon
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: const Color(0x1AF62F56),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person,
+                size: 60,
+                color: Color(0xFFF62F56),
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              user.name,
-              style: GoogleFonts.urbanist(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(user.email, style: GoogleFonts.urbanist(color: Colors.grey)),
 
             const SizedBox(height: 40),
 

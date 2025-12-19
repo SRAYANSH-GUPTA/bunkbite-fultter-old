@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/auth_provider.dart';
 import '../providers/canteen_provider.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/menu_item_card.dart';
@@ -55,7 +54,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   @override
   Widget build(BuildContext context) {
     final canteenState = ref.watch(canteenProvider);
-    final authState = ref.watch(authProvider);
     final cartState = ref.watch(cartProvider);
 
     // Filter menu based on search
@@ -76,109 +74,188 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
             // Header and Banner
             SliverAppBar(
               pinned: true,
-              expandedHeight: 240, // Slightly taller for better spacing
+              floating: false,
+              snap: false,
+              expandedHeight: 120, // Increased for Menu title
               backgroundColor: Colors.white,
+              elevation: 0,
+
+              // Title that shows when collapsed
+              title: Text(
+                'Menu',
+                style: GoogleFonts.urbanist(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
 
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(30),
-                    ),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.white),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Greeting and Canteen Selector in a Column for better spacing
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Good Morning,',
-                                  style: GoogleFonts.urbanist(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  authState.user?.name ?? 'Guest',
-                                  style: GoogleFonts.urbanist(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Canteen Selector - Moved down or adjusted?
-                          // Let's keep it here but ensure it doesn't overlap text?
-                          // Actually user said overlap with Cart Icon (Top Right).
-                          // If we move it down into the body, it won't overlap.
-                          // But flexible space is best.
-                          // Let's just give it explicit spacing.
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Canteen Selector (Full width or distinct row)
-                      if (!canteenState.isLoading &&
-                          canteenState.canteens.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              isExpanded:
-                                  true, // Full width to avoid layout issues
-                              value: canteenState.selectedCanteen?.id,
-                              hint: const Text('Select Canteen'),
-                              icon: const Icon(
-                                Icons.arrow_drop_down,
-                                color: Color(0xFFF62F56),
-                              ),
-                              style: GoogleFonts.urbanist(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              items: canteenState.canteens.map((c) {
-                                return DropdownMenuItem(
-                                  value: c.id,
-                                  child: Text(c.name),
-                                );
-                              }).toList(),
-                              onChanged: (val) {
-                                final selected = canteenState.canteens
-                                    .firstWhere((c) => c.id == val);
-                                ref
-                                    .read(canteenProvider.notifier)
-                                    .selectCanteen(selected);
-                              },
-                            ),
-                          ),
+                      // Menu Title (large when expanded)
+                      Text(
+                        'Menu',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-                      const SizedBox(height: 15),
-                      // Search Bar
+              // Pinned bottom section with canteen selector AND search bar
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(
+                  140,
+                ), // Adjusted for better spacing
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: Column(
+                    children: [
+                      // Canteen Selector - Aligned with search bar
                       Container(
-                        height: 50,
+                        height: 52, // Same height as search bar for consistency
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFF62F56),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0x0DF62F56),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: canteenState.isLoading
+                            ? Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFFF62F56),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Loading canteens...',
+                                    style: GoogleFonts.urbanist(
+                                      fontSize: 15,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : canteenState.canteens.isEmpty
+                            ? Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 20,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'No canteens available',
+                                    style: GoogleFonts.urbanist(
+                                      fontSize: 15,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: canteenState.selectedCanteen?.id,
+                                  hint: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.store_outlined,
+                                        size: 20,
+                                        color: Color(0xFFF62F56),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Select Canteen',
+                                        style: GoogleFonts.urbanist(
+                                          color: Colors.grey[600],
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Color(0xFFF62F56),
+                                    size: 24,
+                                  ),
+                                  style: GoogleFonts.urbanist(
+                                    color: Colors.black87,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  items: canteenState.canteens.map((canteen) {
+                                    return DropdownMenuItem(
+                                      value: canteen.id,
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.store,
+                                            size: 20,
+                                            color: Color(0xFFF62F56),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              canteen.name,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.urbanist(
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    final selected = canteenState.canteens
+                                        .firstWhere((c) => c.id == val);
+                                    ref
+                                        .read(canteenProvider.notifier)
+                                        .selectCanteen(selected);
+                                  },
+                                ),
+                              ),
+                      ),
+
+                      const SizedBox(height: 12), // Consistent spacing
+                      // Search Bar - Matching height and style
+                      Container(
+                        height: 52, // Same height as canteen selector
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey[200]!,
+                            width: 1,
+                          ),
                         ),
                         child: TextField(
                           controller: _searchController,
@@ -187,11 +264,23 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                               _searchQuery = val;
                             });
                           },
-                          decoration: const InputDecoration(
+                          style: GoogleFonts.urbanist(fontSize: 15),
+                          decoration: InputDecoration(
                             hintText: 'Search for food...',
-                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            hintStyle: GoogleFonts.urbanist(
+                              color: Colors.grey[500],
+                              fontSize: 15,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey[600],
+                              size: 22,
+                            ),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 15),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
                           ),
                         ),
                       ),
@@ -199,6 +288,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   ),
                 ),
               ),
+
               actions: [
                 Stack(
                   children: [
@@ -319,22 +409,18 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.all(20),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 15,
-                          mainAxisSpacing: 15,
-                        ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final item = filteredMenu[index]; // Use filteredMenu
+                      final item = filteredMenu[index];
                       final isOpen =
                           canteenState.selectedCanteen?.isCurrentlyOpen ?? true;
 
                       return Opacity(
-                        opacity: isOpen ? 1.0 : 0.5,
+                        opacity: isOpen ? 1.0 : 0.6,
                         child: AbsorbPointer(
                           absorbing: !isOpen,
                           child: MenuItemCard(

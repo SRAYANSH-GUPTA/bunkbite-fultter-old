@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
 import 'main_screen.dart';
 import 'owner/owner_main_view.dart';
-import 'owner/owner_main_view.dart';
 
 class LaunchScreen extends ConsumerStatefulWidget {
   const LaunchScreen({super.key});
@@ -88,27 +87,23 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
             ScaleTransition(
               scale: _scaleAnimation,
               child: Container(
-                width: 120,
-                height: 120,
+                width: 150,
+                height: 150,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF62F56), Color(0xFFFF6B6B)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0x66F62F56),
+                      color: const Color(0x33F62F56),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.restaurant_menu,
-                  color: Colors.white,
-                  size: 60,
+                padding: const EdgeInsets.all(20),
+                child: Image.asset(
+                  'assets/images/bunkbite_logo.png',
+                  fit: BoxFit.contain,
                 ),
               ),
             ),

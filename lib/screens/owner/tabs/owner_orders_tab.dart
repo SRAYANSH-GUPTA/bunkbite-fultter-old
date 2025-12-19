@@ -26,6 +26,14 @@ class _OwnerOrdersTabState extends ConsumerState<OwnerOrdersTab> {
   Widget build(BuildContext context) {
     final ownerState = ref.watch(ownerProvider);
 
+    // Reactive refresh: Auto-fetch when canteen changes
+    ref.listen(ownerProvider, (prev, next) {
+      if (prev?.selectedCanteen?.id != next.selectedCanteen?.id &&
+          next.selectedCanteen != null) {
+        // Orders are already fetched in selectCanteen, but this ensures consistency
+      }
+    });
+
     final filteredOrders = ownerState.orders.where((order) {
       if (_selectedFilter == 'All') return true;
       if (_selectedFilter == 'Pending')

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../providers/canteen_provider.dart';
 import '../../../providers/owner_provider.dart';
 import '../sheets/item_sheet.dart';
 import '../sheets/owner_canteen_selector_sheet.dart';
@@ -18,30 +17,27 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
   @override
   void initState() {
     super.initState();
-    // Fetch menu when tab is initialized or canteen changes
+    // Fetch menu when tab is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchMenu();
+      final selectedCanteen = ref.read(ownerProvider).selectedCanteen;
+      if (selectedCanteen != null) {
+        ref.read(ownerProvider.notifier).fetchCanteenMenu(selectedCanteen.id);
+      }
     });
-  }
-
-  void _fetchMenu() {
-    final selectedCanteen = ref.read(ownerProvider).selectedCanteen;
-    if (selectedCanteen != null) {
-      ref.read(canteenProvider.notifier).fetchMenu(selectedCanteen.id);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final ownerState = ref.watch(ownerProvider);
-    final canteenState = ref.watch(canteenProvider);
     final selectedCanteen = ownerState.selectedCanteen;
 
     // Listener to re-fetch if selected canteen changes
     ref.listen(ownerProvider, (prev, next) {
       if (prev?.selectedCanteen?.id != next.selectedCanteen?.id &&
           next.selectedCanteen != null) {
-        ref.read(canteenProvider.notifier).fetchMenu(next.selectedCanteen!.id);
+        ref
+            .read(ownerProvider.notifier)
+            .fetchCanteenMenu(next.selectedCanteen!.id);
       }
     });
 
@@ -77,7 +73,7 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
       );
     }
 
-    final menuItems = canteenState.menu;
+    final menuItems = ownerState.menu;
     final totalItems = menuItems.length;
     final outOfStock = menuItems.where((i) => i.availableQuantity == 0).length;
     final available = totalItems - outOfStock;
@@ -168,7 +164,7 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
 
             // List
             Expanded(
-              child: canteenState.isLoading
+              child: ownerState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : menuItems.isEmpty
                   ? Center(
@@ -215,8 +211,8 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
                           },
                           onDismissed: (_) {
                             ref
-                                .read(canteenProvider.notifier)
-                                .deleteItem(item.id);
+                                .read(ownerProvider.notifier)
+                                .deleteMenuItem(selectedCanteen.id, item.id);
                           },
                           background: Container(
                             alignment: Alignment.centerRight,
