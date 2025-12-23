@@ -14,9 +14,33 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(
+          seconds: 45,
+        ), // Increased for DNS resolution
+        receiveTimeout: const Duration(seconds: 45),
+        sendTimeout: const Duration(seconds: 45),
         headers: {'Content-Type': 'application/json'},
+      ),
+    );
+
+    // Add retry interceptor for DNS failures
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (DioException error, handler) async {
+          // Retry on DNS lookup failures
+          if (error.type == DioExceptionType.connectionError ||
+              error.message?.contains('Failed host lookup') == true) {
+            // Wait a bit and retry once
+            await Future.delayed(const Duration(seconds: 2));
+            try {
+              final response = await _dio.fetch(error.requestOptions);
+              return handler.resolve(response);
+            } catch (e) {
+              return handler.next(error);
+            }
+          }
+          return handler.next(error);
+        },
       ),
     );
 
