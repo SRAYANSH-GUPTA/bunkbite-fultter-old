@@ -92,30 +92,49 @@ class _OwnerOrdersTabState extends ConsumerState<OwnerOrdersTab> {
           Expanded(
             child: ownerState.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : filteredOrders.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.assignment_outlined,
-                          size: 60,
-                          color: Colors.grey[300],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'No ${_selectedFilter == 'All' ? '' : _selectedFilter} Orders',
-                          style: GoogleFonts.urbanist(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredOrders.length,
-                    itemBuilder: (context, index) {
-                      return OwnerOrderCard(order: filteredOrders[index]);
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      final canteenId = ownerState.selectedCanteen?.id;
+                      if (canteenId != null) {
+                        await ref
+                            .read(ownerProvider.notifier)
+                            .fetchCanteenOrders(canteenId);
+                      }
                     },
+                    child: filteredOrders.isEmpty
+                        ? Stack(
+                            children: [
+                              ListView(), // Scrollable for refresh
+                              Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.assignment_outlined,
+                                      size: 60,
+                                      color: Colors.grey[300],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      'No ${_selectedFilter == 'All' ? '' : _selectedFilter} Orders',
+                                      style: GoogleFonts.urbanist(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredOrders.length,
+                            itemBuilder: (context, index) {
+                              return OwnerOrderCard(
+                                order: filteredOrders[index],
+                              );
+                            },
+                          ),
                   ),
           ),
         ],

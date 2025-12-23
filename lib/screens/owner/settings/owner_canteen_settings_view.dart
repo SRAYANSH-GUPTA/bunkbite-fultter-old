@@ -91,10 +91,17 @@ class _OwnerCanteenSettingsViewState
         );
         Navigator.pop(context);
       } else {
+        // Show the actual error message
+        final canteenState = ref.read(canteenProvider);
+        final errorMsg = canteenState.error != null
+            ? 'Error: ${canteenState.error}'
+            : 'Failed to update hours';
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update hours'),
+          SnackBar(
+            content: Text(errorMsg),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

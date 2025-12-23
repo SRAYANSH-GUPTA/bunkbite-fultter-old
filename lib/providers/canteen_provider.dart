@@ -158,9 +158,14 @@ class CanteenNotifier extends StateNotifier<CanteenState> {
     String close,
   ) async {
     try {
-      await _apiService.client.patch(
-        '/canteens/$canteenId',
-        data: {'openingTime': open, 'closingTime': close},
+      await _apiService.client.post(
+        '/canteens?id=$canteenId',
+        data: {
+          'id': canteenId,
+          'openingTime': open,
+          'closingTime': close,
+          'isOpen': true, // Maintain current status
+        },
       );
       await fetchCanteens();
       return true;

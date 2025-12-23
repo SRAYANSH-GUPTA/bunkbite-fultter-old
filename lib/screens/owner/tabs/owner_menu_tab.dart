@@ -174,186 +174,198 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
                         style: GoogleFonts.urbanist(color: Colors.grey),
                       ),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: menuItems.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final item = menuItems[index];
-                        final isOutOfStock = item.availableQuantity == 0;
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        await ref
+                            .read(ownerProvider.notifier)
+                            .fetchCanteenMenu(selectedCanteen.id);
+                      },
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: menuItems.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = menuItems[index];
+                          final isOutOfStock = item.availableQuantity == 0;
 
-                        return Dismissible(
-                          key: Key(item.id),
-                          direction: DismissDirection.endToStart,
-                          confirmDismiss: (_) async {
-                            return await showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Delete Item?'),
-                                content: Text(
-                                  'Are you sure you want to delete ${item.name}?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text(
-                                      'Delete',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          onDismissed: (_) {
-                            ref
-                                .read(ownerProvider.notifier)
-                                .deleteMenuItem(selectedCanteen.id, item.id);
-                          },
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
-                          ),
-                          child: InkWell(
-                            onTap: () {
-                              showModalBottomSheet(
+                          return Dismissible(
+                            key: Key(item.id),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (_) async {
+                              return await showDialog(
                                 context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => ItemSheet(
-                                  item: item,
-                                  canteenId: selectedCanteen.id,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete Item?'),
+                                  content: Text(
+                                    'Are you sure you want to delete ${item.name}?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
+                            onDismissed: (_) {
+                              ref
+                                  .read(ownerProvider.notifier)
+                                  .deleteMenuItem(selectedCanteen.id, item.id);
+                            },
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Colors.red,
                                 borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0x0D9E9E9E),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
                               ),
-                              child: Row(
-                                children: [
-                                  // Placeholder Image
-                                  Container(
-                                    width: 60,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(10),
-                                      image: item.image != null
-                                          ? DecorationImage(
-                                              image: NetworkImage(item.image!),
-                                              fit: BoxFit.cover,
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (_) => ItemSheet(
+                                    item: item,
+                                    canteenId: selectedCanteen.id,
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0x0D9E9E9E),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Placeholder Image
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(10),
+                                        image: item.image != null
+                                            ? DecorationImage(
+                                                image: NetworkImage(
+                                                  item.image!,
+                                                ),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
+                                      ),
+                                      child: item.image == null
+                                          ? const Icon(
+                                              Icons.fastfood,
+                                              color: Colors.grey,
                                             )
                                           : null,
                                     ),
-                                    child: item.image == null
-                                        ? const Icon(
-                                            Icons.fastfood,
-                                            color: Colors.grey,
-                                          )
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.name,
-                                          style: GoogleFonts.urbanist(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        Text(
-                                          '₹${item.price}',
-                                          style: GoogleFonts.urbanist(
-                                            color: const Color(0xFFF62F56),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      // Open Quick Quantity Sheet
-                                      showModalBottomSheet(
-                                        context: context,
-                                        backgroundColor: Colors.transparent,
-                                        builder: (_) => QuickQuantitySheet(
-                                          item: item,
-                                          canteenId: selectedCanteen.id,
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isOutOfStock
-                                            ? const Color(0x1AF44336)
-                                            : const Color(0x1A4CAF50),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: isOutOfStock
-                                              ? Colors.red
-                                              : Colors.green,
-                                        ),
-                                      ),
-                                      child: Row(
+                                    const SizedBox(width: 15),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.inventory_2_outlined,
-                                            size: 14,
-                                            color: isOutOfStock
-                                                ? Colors.red
-                                                : Colors.green,
-                                          ),
-                                          const SizedBox(width: 4),
                                           Text(
-                                            '${item.availableQuantity}',
+                                            item.name,
                                             style: GoogleFonts.urbanist(
                                               fontWeight: FontWeight.bold,
-                                              color: isOutOfStock
-                                                  ? Colors.red
-                                                  : Colors.green,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          Text(
+                                            '₹${item.price}',
+                                            style: GoogleFonts.urbanist(
+                                              color: const Color(0xFFF62F56),
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    GestureDetector(
+                                      onTap: () {
+                                        // Open Quick Quantity Sheet
+                                        showModalBottomSheet(
+                                          context: context,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (_) => QuickQuantitySheet(
+                                            item: item,
+                                            canteenId: selectedCanteen.id,
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isOutOfStock
+                                              ? const Color(0x1AF44336)
+                                              : const Color(0x1A4CAF50),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: isOutOfStock
+                                                ? Colors.red
+                                                : Colors.green,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.inventory_2_outlined,
+                                              size: 14,
+                                              color: isOutOfStock
+                                                  ? Colors.red
+                                                  : Colors.green,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${item.availableQuantity}',
+                                              style: GoogleFonts.urbanist(
+                                                fontWeight: FontWeight.bold,
+                                                color: isOutOfStock
+                                                    ? Colors.red
+                                                    : Colors.green,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],
