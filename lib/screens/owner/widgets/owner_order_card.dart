@@ -233,9 +233,9 @@ class OwnerOrderCard extends ConsumerWidget {
                 ElevatedButton(
                   onPressed: () {
                     String nextStatus = status;
-                    if (status == 'preparing')
+                    if (status == 'preparing') {
                       nextStatus = 'ready';
-                    else if (status == 'ready')
+                    } else if (status == 'ready')
                       nextStatus = 'completed';
 
                     if (nextStatus != status) {

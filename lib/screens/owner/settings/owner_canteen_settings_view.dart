@@ -62,10 +62,11 @@ class _OwnerCanteenSettingsViewState
     );
     if (picked != null) {
       setState(() {
-        if (isOpening)
+        if (isOpening) {
           _openingTime = picked;
-        else
+        } else {
           _closingTime = picked;
+        }
       });
     }
   }
@@ -193,7 +194,7 @@ class _OwnerCanteenSettingsViewState
                     child: Switch(
                       value: isOpen,
                       onChanged: (val) => _toggleStatus(),
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                       inactiveTrackColor: const Color(0x4DF44336),
                       inactiveThumbColor: Colors.red,
                     ),

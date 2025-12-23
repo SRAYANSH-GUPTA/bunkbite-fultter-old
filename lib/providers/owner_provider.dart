@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../core/api_service.dart';
 import '../core/constants.dart';
@@ -108,7 +107,7 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
           final decoded = JwtDecoder.decode(token);
           ownerId = decoded['id'] ?? decoded['_id'];
         } catch (e) {
-          print('Failed to decode token: $e');
+          // Token decode failed
         }
       }
 
@@ -141,32 +140,23 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
       final orders = data.map((e) => OrderModel.fromJson(e)).toList();
       state = state.copyWith(orders: orders);
     } catch (e) {
-      print('Error fetching orders: $e');
+      // Error fetching orders
     }
   }
 
   Future<void> fetchAnalytics(String canteenId, {String period = 'day'}) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      print(
-        'DEBUG: Fetching analytics for canteen: $canteenId, period: $period',
-      );
 
       final response = await _apiService.client.get(
         '/analytics/canteen/$canteenId',
         queryParameters: {'period': period},
       );
 
-      print('DEBUG: Analytics Response Status: ${response.statusCode}');
-      print('DEBUG: Analytics Response Data: ${response.data}');
-
       final Map<String, dynamic> data = response.data['data'] ?? {};
-
-      print('DEBUG: Parsed Analytics Data: $data');
 
       state = state.copyWith(isLoading: false, analyticsData: data);
     } catch (e) {
-      print('DEBUG: Analytics Error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -213,7 +203,6 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
       final data = response.data['data'] ?? response.data;
       return OrderModel.fromJson(data);
     } catch (e) {
-      print('Error fetching order: $e');
       return null;
     }
   }
@@ -227,7 +216,6 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
       }
       return true;
     } catch (e) {
-      print('Error completing pickup: $e');
       return false;
     }
   }
@@ -255,7 +243,6 @@ class OwnerNotifier extends StateNotifier<OwnerState> {
       final menu = data.map((e) => MenuItem.fromJson(e)).toList();
       state = state.copyWith(menu: menu);
     } catch (e) {
-      print('Error fetching menu: $e');
       state = state.copyWith(menu: []);
     }
   }

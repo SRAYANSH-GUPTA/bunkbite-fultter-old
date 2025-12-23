@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../core/api_service.dart';
 import '../models/order_model.dart';
 
@@ -20,7 +19,6 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     state = OrdersState(isLoading: true);
     try {
       final response = await _apiService.client.get('/orders');
-      print('DEBUG: Orders Response: ${response.data}'); // Debug Log
 
       // Response format: { success: true, count: N, data: [...] }
       final List data = response.data['data'] ?? [];
@@ -28,10 +26,8 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
       // Sort by newest first
       orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      print('DEBUG: Parsed ${orders.length} orders'); // Debug Log
       state = OrdersState(isLoading: false, orders: orders);
     } catch (e) {
-      print('DEBUG: Fetch Orders Failed: $e'); // Debug Log
       state = OrdersState(isLoading: false, error: e.toString());
     }
   }

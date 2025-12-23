@@ -143,7 +143,6 @@ class _QRScannerViewState extends ConsumerState<QRScannerView> {
         );
       }
     } catch (e) {
-      print('QR Scan Error: $e');
       if (mounted) {
         _showErrorDialog('Error processing QR code: ${e.toString()}');
       }

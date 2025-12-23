@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import 'package:dio/dio.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../core/api_service.dart';
@@ -91,20 +90,15 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<bool> sendOtp(String email) async {
-    print('Sending OTP to: $email'); // DEBUG LOG
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _apiService.client.post(
+      await _apiService.client.post(
         '/auth/email/send-otp',
         data: {'email': email},
       );
-      print(
-        'Send OTP Response: ${response.statusCode} - ${response.data}',
-      ); // DEBUG LOG
       state = state.copyWith(isLoading: false);
       return true;
     } on DioException catch (e) {
-      print('Send OTP Error: ${e.message} - ${e.response?.data}'); // DEBUG LOG
       String errorMessage = 'Failed to send OTP';
       final data = e.response?.data;
       if (data is Map && data.containsKey('message')) {
@@ -118,21 +112,18 @@ class AuthController extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     } catch (e) {
-      print('Send OTP Generic Error: $e'); // DEBUG LOG
       state = state.copyWith(isLoading: false, error: 'Unexpected error: $e');
       return false;
     }
   }
 
   Future<bool> verifyOtp(String email, String otp) async {
-    print('Sending OTP to verify: $email');
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _apiService.client.post(
         '/auth/email/verify-otp',
         data: {'email': email, 'otp': otp},
       );
-      print('Verify Response: ${response.data}');
 
       final token = response.data['token'];
       if (token == null) throw Exception('No token received');
@@ -141,7 +132,6 @@ class AuthController extends StateNotifier<AuthState> {
 
       // Decode Token to get User Details
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      print('Decoded Token: $decodedToken');
 
       // Expected claims: { id: "...", email: "...", role: "...", name: "..." }
       // If name is missing, use email part.
@@ -154,12 +144,9 @@ class AuthController extends StateNotifier<AuthState> {
         role: decodedToken['role'] ?? 'user',
       );
 
-      print('DEBUG: User Email Stored: ${user.email}'); // Debug log
-
       state = AuthState(isAuthenticated: true, isLoading: false, user: user);
       return true;
     } on DioException catch (e) {
-      print('Verify Error:Wrapper ${e.response?.data}');
       String errorMessage = 'Invalid OTP';
       final data = e.response?.data;
       if (data is Map && data.containsKey('message')) {

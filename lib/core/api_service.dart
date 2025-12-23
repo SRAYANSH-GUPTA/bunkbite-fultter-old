@@ -27,26 +27,12 @@ class ApiService {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          print(
-            'API Request: [${options.method}] ${options.baseUrl}${options.path}',
-          );
-          print('Headers: ${options.headers}');
-          if (options.data != null) print('Body: ${options.data}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print(
-            'API Response: [${response.statusCode}] ${response.requestOptions.path}',
-          );
-          print('Data: ${response.data}');
           return handler.next(response);
         },
         onError: (DioException e, handler) {
-          print('API Error: ${e.message} at ${e.requestOptions.path}');
-          if (e.response != null) {
-            print('Error Status: ${e.response?.statusCode}');
-            print('Error Data: ${e.response?.data}');
-          }
           return handler.next(e);
         },
       ),

@@ -361,7 +361,6 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          if (selectedCanteen == null) return;
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,

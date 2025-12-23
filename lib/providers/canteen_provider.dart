@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../core/api_service.dart';
 import '../models/canteen_model.dart';
 import '../models/menu_item_model.dart';
@@ -78,29 +77,15 @@ class CanteenNotifier extends StateNotifier<CanteenState> {
     // state = state.copyWith(isLoading: true); // Don't block whole UI, maybe just menu part
     // For now simple loading
     try {
-      print('Fetching menu for canteen: $canteenId');
       final response = await _apiService.client.get('/menu/canteen/$canteenId');
-
-      // Debug: Print full response
-      print('Menu API Response: ${response.data}');
 
       // Response format: { success: true, data: [...] }
       final List data = response.data['data'] ?? [];
-      print('Menu data array length: ${data.length}');
-
-      if (data.isNotEmpty) {
-        print('First menu item raw: ${data[0]}');
-      }
 
       final menu = data.map((e) => MenuItem.fromJson(e)).toList();
-      print('Menu loaded: ${menu.length} items');
-      if (menu.isEmpty) {
-        print('menu is not showing');
-      }
       state = state.copyWith(menu: menu);
     } catch (e) {
       // If fails, maybe empty menu
-      print('Error fetching menu: $e');
       state = state.copyWith(menu: []);
     }
   }

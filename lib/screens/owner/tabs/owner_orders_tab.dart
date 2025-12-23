@@ -36,8 +36,9 @@ class _OwnerOrdersTabState extends ConsumerState<OwnerOrdersTab> {
 
     final filteredOrders = ownerState.orders.where((order) {
       if (_selectedFilter == 'All') return true;
-      if (_selectedFilter == 'Pending')
+      if (_selectedFilter == 'Pending') {
         return order.status == 'pending'; // or 'new'
+      }
       if (_selectedFilter == 'Preparing') return order.status == 'preparing';
       if (_selectedFilter == 'Ready') return order.status == 'ready';
       if (_selectedFilter == 'Completed') return order.status == 'completed';

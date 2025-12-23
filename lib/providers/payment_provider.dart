@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:dio/dio.dart';
 import '../core/api_service.dart';
@@ -99,7 +98,6 @@ class PaymentController extends StateNotifier<PaymentState> {
           responseData['_id'] ??
           responseData['id']; // Defensive
       _currentOrderId = orderId;
-      print('DEBUG: Created Order ID: $orderId');
 
       // 2. Initiate Payment (Razorpay Order)
       final payRes = await _apiService.client.post(
@@ -107,7 +105,6 @@ class PaymentController extends StateNotifier<PaymentState> {
         data: {'orderId': orderId},
       );
       // Response: { success: true, data: { razorpayOrderId: ..., amount: ..., razorpayKeyId: ... } }
-      print('DEBUG: Payment Initiate Response: ${payRes.data}');
 
       final payData = payRes.data['data'];
       final String razorpayOrderId = payData['razorpayOrderId'];
@@ -122,10 +119,6 @@ class PaymentController extends StateNotifier<PaymentState> {
       final user = ref.read(authProvider).user;
       final userEmail = user?.email ?? 'student@example.com';
       final phone = '9000090000'; // Placeholder
-
-      print(
-        'DEBUG: Opening Razorpay with OrderID: $razorpayOrderId, Amount: $amount, Key: $razorpayKey',
-      );
 
       // Temporary Debug Toast
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +150,6 @@ class PaymentController extends StateNotifier<PaymentState> {
 
       _razorpay.open(options);
     } catch (e) {
-      print('DEBUG: Payment Exception: $e');
       final friendlyError = _getUserFriendlyError(e);
       state = PaymentState(isLoading: false, error: friendlyError);
       if (context.mounted) {
@@ -167,19 +159,14 @@ class PaymentController extends StateNotifier<PaymentState> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    print('DEBUG: Payment Success: ${response.paymentId}');
-    print('DEBUG: Order ID: ${response.orderId}');
-    print('DEBUG: Signature: ${response.signature}');
-
     // Verify payment
     final orderId = _currentOrderId;
     if (orderId == null) {
-      print('ERROR: No current order ID');
       return;
     }
 
     try {
-      final verifyRes = await _apiService.client.post(
+      await _apiService.client.post(
         '/payments/verify',
         data: {
           'orderId': orderId,
@@ -188,8 +175,6 @@ class PaymentController extends StateNotifier<PaymentState> {
           'razorpaySignature': response.signature,
         },
       );
-
-      print('DEBUG: Verify Response: ${verifyRes.data}');
 
       // Fetch the complete order details
       final orderRes = await _apiService.client.get('/orders/$orderId');
@@ -216,7 +201,6 @@ class PaymentController extends StateNotifier<PaymentState> {
         );
       }
     } catch (e) {
-      print('ERROR: Payment verification failed: $e');
       final friendlyError = _getUserFriendlyError(e);
       if (_context != null && _context!.mounted) {
         ErrorDialog.show(

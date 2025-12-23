@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 
 class MyState {}
 
@@ -12,5 +11,5 @@ final myProvider = StateNotifierProvider<MyNotifier, MyState>((ref) {
 });
 
 void main() {
-  print('Compilation check');
+  // Compilation check
 }

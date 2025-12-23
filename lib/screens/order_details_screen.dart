@@ -185,7 +185,7 @@ class OrderDetailsScreen extends StatelessWidget {
                     ),
                   ),
                 )
-                .toList(),
+                ,
 
             const Divider(height: 40),
             Row(

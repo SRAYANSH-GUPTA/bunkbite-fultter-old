@@ -305,9 +305,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               OutlinedButton.icon(
                 onPressed: () {
                   // Reorder Logic
-                  final canteenId = order.canteenId is String
-                      ? order.canteenId
-                      : (order.canteenId as Map)['_id'];
+                  final canteenId = order.canteenId;
 
                   final cartNotifier = ref.read(cartProvider.notifier);
                   cartNotifier.clearCart();
