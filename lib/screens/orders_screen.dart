@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../providers/orders_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/payment_provider.dart';
 import 'login_sheet.dart';
 import 'cart_sheet.dart';
 import '../providers/cart_provider.dart';
@@ -19,7 +20,7 @@ class OrdersScreen extends ConsumerStatefulWidget {
 }
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
-  String _filter = 'All'; // All, Paid, Completed
+  String _filter = 'All'; // All, Pending, Active, Completed, Cancelled
 
   @override
   void initState() {
@@ -78,29 +79,25 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
     final ordersState = ref.watch(ordersProvider);
 
-    // Filter logic
+    // Updated filter logic to show pending and cancelled orders
     final displayedOrders = ordersState.orders.where((order) {
-      bool isPaid =
-          order.paymentStatus == 'success' ||
-          order.paymentStatus == 'completed';
-      bool isActive = [
-        'preparing',
-        'ready',
-        'completed',
-      ].contains(order.status);
-
-      // Hide unpaid pending orders
-      if (!isPaid && !isActive) return false;
-
       if (_filter == 'All') return true;
 
-      if (_filter == 'Paid') {
-        // Only show paid orders that are NOT completed
-        // (preparing, ready, or any paid order that's not completed)
-        return isPaid && order.status != 'completed';
+      if (_filter == 'Pending') {
+        return order.paymentStatus == 'pending' && order.status != 'cancelled';
+      }
+
+      if (_filter == 'Active') {
+        bool isPaid =
+            order.paymentStatus == 'completed' ||
+            order.paymentStatus == 'success';
+        return isPaid &&
+            order.status != 'completed' &&
+            order.status != 'cancelled';
       }
 
       if (_filter == 'Completed') return order.status == 'completed';
+      if (_filter == 'Cancelled') return order.status == 'cancelled';
 
       return true;
     }).toList();
@@ -133,33 +130,35 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: ['All', 'Paid', 'Completed'].map((filter) {
-                final isSelected = _filter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: FilterChip(
-                    label: Text(filter),
-                    selected: isSelected,
-                    selectedColor: const Color(0x33F62F56),
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFFF62F56)
-                          : Colors.black,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    onSelected: (val) {
-                      setState(() {
-                        _filter = filter;
-                      });
-                    },
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                );
-              }).toList(),
+              children: ['All', 'Pending', 'Active', 'Completed', 'Cancelled']
+                  .map((filter) {
+                    final isSelected = _filter == filter;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: FilterChip(
+                        label: Text(filter),
+                        selected: isSelected,
+                        selectedColor: const Color(0x33F62F56),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? const Color(0xFFF62F56)
+                              : Colors.black,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                        onSelected: (val) {
+                          setState(() {
+                            _filter = filter;
+                          });
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    );
+                  })
+                  .toList(),
             ),
           ),
           const SizedBox(height: 10),
@@ -207,6 +206,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     if (order.status == 'completed') statusColor = Colors.green;
     if (order.status == 'ready') statusColor = Colors.orange;
     if (order.status == 'preparing') statusColor = Colors.blue;
+    if (order.status == 'pending' && order.paymentStatus == 'pending')
+      statusColor = Colors.amber;
+    if (order.status == 'cancelled') statusColor = Colors.red;
 
     // Format Date: Dec 17, 2025 at 12:30 PM
     String formattedDate = order.createdAt;
@@ -301,55 +303,82 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   style: GoogleFonts.urbanist(fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Reorder Logic
-                  final canteenId = order.canteenId;
+              // Conditional button based on payment status
+              if (order.paymentStatus == 'pending' &&
+                  order.status != 'cancelled')
+                ElevatedButton.icon(
+                  onPressed: () => _handlePayment(order),
+                  icon: const Icon(Icons.payment, size: 16),
+                  label: Text(
+                    'Pay Now',
+                    style: GoogleFonts.urbanist(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF62F56),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                  ),
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: () {
+                    // Reorder Logic
+                    final canteenId = order.canteenId;
 
-                  final cartNotifier = ref.read(cartProvider.notifier);
-                  cartNotifier.clearCart();
+                    final cartNotifier = ref.read(cartProvider.notifier);
+                    cartNotifier.clearCart();
 
-                  for (var item in order.items) {
-                    final menuItem = MenuItem(
-                      id: item.menuItemId,
-                      name: item.name,
-                      price: item.price,
-                      availableQuantity: 99,
-                      canteenId: canteenId,
-                      image: '',
-                    );
-                    cartNotifier.addItem(menuItem, canteenId);
-                    // Add remaining qty
-                    for (int i = 0; i < item.quantity - 1; i++) {
+                    for (var item in order.items) {
+                      final menuItem = MenuItem(
+                        id: item.menuItemId,
+                        name: item.name,
+                        price: item.price,
+                        availableQuantity: 99,
+                        canteenId: canteenId,
+                        image: '',
+                      );
                       cartNotifier.addItem(menuItem, canteenId);
+                      // Add remaining qty
+                      for (int i = 0; i < item.quantity - 1; i++) {
+                        cartNotifier.addItem(menuItem, canteenId);
+                      }
                     }
-                  }
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Items added to cart!')),
-                  );
-                },
-                icon: const Icon(
-                  Icons.refresh,
-                  size: 16,
-                  color: Color(0xFFF62F56),
-                ),
-                label: Text(
-                  'Reorder',
-                  style: GoogleFonts.urbanist(
-                    color: const Color(0xFFF62F56),
-                    fontWeight: FontWeight.bold,
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Items added to cart!')),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.refresh,
+                    size: 16,
+                    color: Color(0xFFF62F56),
+                  ),
+                  label: Text(
+                    'Reorder',
+                    style: GoogleFonts.urbanist(
+                      color: const Color(0xFFF62F56),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFF62F56)),
                   ),
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFF62F56)),
-                ),
-              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _handlePayment(OrderModel order) async {
+    // Use the payment provider to initiate Razorpay payment flow
+    // Pass orderId (e.g., "ORD123") not the MongoDB _id
+    ref
+        .read(paymentProvider.notifier)
+        .initiatePaymentForExistingOrder(context, order.orderId);
   }
 }

@@ -120,16 +120,6 @@ class PaymentController extends StateNotifier<PaymentState> {
       final userEmail = user?.email ?? 'student@example.com';
       final phone = '9000090000'; // Placeholder
 
-      // Temporary Debug Toast
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Debug: Key=$razorpayKey, Ord=${razorpayOrderId.substring(0, 10)}...',
-          ),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-
       // STRICT iOS Standard Options
       var options = {
         'key': razorpayKey,
@@ -154,6 +144,71 @@ class PaymentController extends StateNotifier<PaymentState> {
       state = PaymentState(isLoading: false, error: friendlyError);
       if (context.mounted) {
         ErrorDialog.show(context, friendlyError, title: 'Checkout Failed');
+      }
+    }
+  }
+
+  // New method for paying existing pending orders
+  void initiatePaymentForExistingOrder(
+    BuildContext context,
+    String orderId,
+  ) async {
+    _context = context; // Store context for later use
+    _currentOrderId = orderId;
+    state = PaymentState(isLoading: true);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Wait... Starting Payment...')),
+    );
+
+    try {
+      // Initiate Payment (Razorpay Order) for existing order
+      final payRes = await _apiService.client.post(
+        '/payments/initiate',
+        data: {'orderId': orderId},
+      );
+
+      final payData = payRes.data['data'];
+      final String razorpayOrderId = payData['razorpayOrderId'];
+      final int amount = payData['amount'];
+      final String razorpayKey =
+          payData['razorpayKeyId'] ??
+          payData['keyId'] ??
+          "rzp_test_1DP5mmOlF5G5ag";
+
+      // Get User Details
+      final user = ref.read(authProvider).user;
+      final userEmail = user?.email ?? 'student@example.com';
+      final phone = '9000090000'; // Placeholder
+
+      // STRICT iOS Standard Options
+      var options = {
+        'key': razorpayKey,
+        'amount': amount,
+        'name': 'BunkBite',
+        'description': 'Payment for Order $orderId',
+        'order_id': razorpayOrderId,
+        'prefill': {'contact': phone, 'email': userEmail},
+        'theme': {'color': '#667eea'},
+        'external': {
+          'wallets': ['paytm'],
+        },
+        'retry': {'enabled': true, 'max_count': 1},
+        'send_sms_hash': true,
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      final friendlyError = _getUserFriendlyError(e);
+      state = PaymentState(isLoading: false, error: friendlyError);
+      if (context.mounted) {
+        // Show detailed error for debugging
+        print('Payment initiation error: $e');
+        ErrorDialog.show(
+          context,
+          'Error: $friendlyError\n\nPlease check if the order exists and try again.',
+          title: 'Payment Failed',
+        );
       }
     }
   }

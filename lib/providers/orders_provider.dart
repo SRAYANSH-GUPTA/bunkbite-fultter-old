@@ -31,6 +31,15 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
       state = OrdersState(isLoading: false, error: e.toString());
     }
   }
+
+  Future<bool> payForOrder(String orderId) async {
+    try {
+      await _apiService.client.post('/orders/$orderId/pay');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 final ordersProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((

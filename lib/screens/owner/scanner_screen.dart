@@ -12,6 +12,13 @@ class ScannerScreen extends ConsumerStatefulWidget {
 
 class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _isProcessing = false;
+  bool _isActive = true; // Track if scanner is still active
+
+  @override
+  void dispose() {
+    _isActive = false; // Prevent any pending SnackBars from showing
+    super.dispose();
+  }
 
   void _handleBarcode(BarcodeCapture capture) async {
     if (_isProcessing) return;
@@ -22,17 +29,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         final success = await ref
             .read(ownerProvider.notifier)
             .verifyQr(barcode.rawValue!);
-        if (!mounted) return;
+        if (!mounted || !_isActive) return;
 
         if (success) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Order Verified!')));
-          Navigator.pop(context);
+          if (_isActive) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Order Verified!')));
+            Navigator.pop(context);
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid QR or Verification Failed')),
-          );
+          if (_isActive) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid QR or Verification Failed'),
+              ),
+            );
+          }
           // Delay before processing again
           await Future.delayed(const Duration(seconds: 2));
           _isProcessing = false;

@@ -6,6 +6,7 @@ class Canteen {
   final String place;
   final String ownerId;
   final bool isOpen;
+  final bool isCurrentlyOpen; // From backend API
   final String openingTime;
   final String closingTime;
   final String? image;
@@ -17,35 +18,12 @@ class Canteen {
     required this.place,
     required this.ownerId,
     required this.isOpen,
+    required this.isCurrentlyOpen,
     required this.openingTime,
     required this.closingTime,
     this.image,
     required this.menu,
   });
-
-  bool get isCurrentlyOpen {
-    if (!isOpen) return false;
-
-    try {
-      final now = DateTime.now();
-      // Parse Opening Time "09:00"
-      final openParts = openingTime.split(':');
-      final openH = int.parse(openParts[0]);
-      final openM = int.parse(openParts[1]);
-      final openDate = DateTime(now.year, now.month, now.day, openH, openM);
-
-      // Parse Closing Time "21:00"
-      final closeParts = closingTime.split(':');
-      final closeH = int.parse(closeParts[0]);
-      final closeM = int.parse(closeParts[1]);
-      final closeDate = DateTime(now.year, now.month, now.day, closeH, closeM);
-
-      return now.isAfter(openDate) && now.isBefore(closeDate);
-    } catch (e) {
-      // Fallback if formatting fails
-      return isOpen;
-    }
-  }
 
   factory Canteen.fromJson(Map<String, dynamic> json) {
     var menuList = json['menu'] as List?;
@@ -83,6 +61,7 @@ class Canteen {
       place: json['place'] ?? '',
       ownerId: ownerIdStr,
       isOpen: json['isOpen'] ?? true,
+      isCurrentlyOpen: json['isCurrentlyOpen'] ?? false,
       openingTime: json['openingTime'] ?? '09:00',
       closingTime: json['closingTime'] ?? '21:00',
       image: imageStr,
@@ -97,6 +76,7 @@ class Canteen {
       'place': place,
       'ownerId': ownerId,
       'isOpen': isOpen,
+      'isCurrentlyOpen': isCurrentlyOpen,
       'openingTime': openingTime,
       'closingTime': closingTime,
       'image': image,

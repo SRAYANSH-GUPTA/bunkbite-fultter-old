@@ -16,9 +16,83 @@ class _LoginSheetState extends ConsumerState<LoginSheet> {
   final _otpController = TextEditingController();
   bool _isOtpSent = false;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  bool _isValidEmail(String email) {
+    // Hardcore email validation regex based on RFC 5322
+    // This regex validates:
+    // - Local part: alphanumeric, dots, hyphens, underscores, plus signs
+    // - No consecutive dots or dots at start/end of local part
+    // - Domain: alphanumeric with hyphens, proper subdomain structure
+    // - TLD: 2-63 characters, letters only
+    // - No leading/trailing dots or hyphens in domain parts
+    final emailRegex = RegExp(
+      r'^(?!.*\.\.)(?!\.)[a-zA-Z0-9]+(?:[._+-][a-zA-Z0-9]+)*@'
+      r'(?!-)[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*'
+      r'(?:\.[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)*'
+      r'\.[a-zA-Z]{2,63}$',
+      caseSensitive: false,
+    );
+
+    // Additional validation checks
+    if (email.isEmpty || email.length > 254) return false;
+    if (!emailRegex.hasMatch(email)) return false;
+
+    // Check local part length (before @)
+    final parts = email.split('@');
+    if (parts.length != 2) return false;
+    if (parts[0].isEmpty || parts[0].length > 64) return false;
+
+    // Ensure domain has at least one dot and valid structure
+    final domain = parts[1];
+    if (!domain.contains('.')) return false;
+    if (domain.startsWith('.') || domain.endsWith('.')) return false;
+    if (domain.startsWith('-') || domain.endsWith('-')) return false;
+
+    // Check for invalid consecutive characters
+    if (email.contains('..') ||
+        email.contains('--') ||
+        email.contains('.-') ||
+        email.contains('-.')) {
+      return false;
+    }
+
+    return true;
+  }
+
+  void _showErrorToast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Future<void> _handleSendOtp() async {
     final email = _emailController.text.trim();
-    if (email.isEmpty) return;
+
+    // Check if email is empty
+    if (email.isEmpty) {
+      _showErrorToast('Please enter your email address');
+      return;
+    }
+
+    // Validate email format
+    if (!_isValidEmail(email)) {
+      _showErrorToast('Please enter a valid email address');
+      return;
+    }
 
     final success = await ref.read(authProvider.notifier).sendOtp(email);
     if (success && mounted) {
@@ -49,6 +123,13 @@ class _LoginSheetState extends ConsumerState<LoginSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to auth errors and show them as toasts
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.error != null && next.error!.isNotEmpty) {
+        _showErrorToast(next.error!);
+      }
+    });
+
     final authState = ref.watch(authProvider);
 
     return Container(
@@ -129,14 +210,6 @@ class _LoginSheetState extends ConsumerState<LoginSheet> {
               ),
             ),
           const SizedBox(height: 20),
-          if (authState.error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                authState.error!,
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
           SizedBox(
             width: double.infinity,
             height: 55,

@@ -16,13 +16,28 @@ class OwnerMainView extends ConsumerStatefulWidget {
 
 class _OwnerMainViewState extends ConsumerState<OwnerMainView> {
   int _currentIndex = 1; // Default to Orders Tab
+  bool _isScannerProcessing = false; // Track scanner processing state
 
-  final List<Widget> _tabs = [
-    const OwnerMenuTab(),
-    const OwnerOrdersTab(),
-    const OwnerProfileView(),
-    const QRScannerView(),
-  ];
+  Widget _getCurrentTab() {
+    switch (_currentIndex) {
+      case 0:
+        return const OwnerMenuTab();
+      case 1:
+        return const OwnerOrdersTab();
+      case 2:
+        return const OwnerProfileView();
+      case 3:
+        return QRScannerView(
+          onProcessingChanged: (isProcessing) {
+            if (mounted) {
+              setState(() => _isScannerProcessing = isProcessing);
+            }
+          },
+        );
+      default:
+        return const OwnerOrdersTab();
+    }
+  }
 
   @override
   void initState() {
@@ -57,33 +72,44 @@ class _OwnerMainViewState extends ConsumerState<OwnerMainView> {
     });
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _tabs),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        backgroundColor: Colors.white,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.restaurant), // fork.knife equivalent
-            label: 'Inventory',
+      body: _getCurrentTab(), // Direct widget switching instead of IndexedStack
+      bottomNavigationBar: IgnorePointer(
+        ignoring: _isScannerProcessing, // Disable navbar during processing
+        child: Opacity(
+          opacity: _isScannerProcessing ? 0.5 : 1.0, // Visual feedback
+          child: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              // Only allow navigation if not processing
+              if (!_isScannerProcessing) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              }
+            },
+            backgroundColor: Colors.white,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.restaurant), // fork.knife equivalent
+                label: 'Inventory',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.list_alt), // list.clipboard equivalent
+                label: 'Orders',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline), // person equivalent
+                label: 'Profile',
+              ),
+              NavigationDestination(
+                icon: Icon(
+                  Icons.qr_code_scanner,
+                ), // qrcode.viewfinder equivalent
+                label: 'Scan',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.list_alt), // list.clipboard equivalent
-            label: 'Orders',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline), // person equivalent
-            label: 'Profile',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.qr_code_scanner), // qrcode.viewfinder equivalent
-            label: 'Scan',
-          ),
-        ],
+        ),
       ),
     );
   }
