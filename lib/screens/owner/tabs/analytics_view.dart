@@ -339,7 +339,7 @@ class _AnalyticsViewState extends ConsumerState<AnalyticsView> {
         barRods: [
           BarChartRodData(
             toY: value,
-            color: const Color(0xFFF62F56),
+            color: const Color(0xFF0B7D3B),
             width: 20,
             borderRadius: BorderRadius.circular(4),
             backDrawRodData: BackgroundBarChartRodData(

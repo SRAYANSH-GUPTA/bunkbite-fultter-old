@@ -155,13 +155,13 @@ class _OwnerOrdersTabState extends ConsumerState<OwnerOrdersTab> {
       backgroundColor: Colors.white,
       selectedColor: const Color(0x1AF62F56),
       labelStyle: GoogleFonts.urbanist(
-        color: isSelected ? const Color(0xFFF62F56) : Colors.black,
+        color: isSelected ? const Color(0xFF0B7D3B) : Colors.black,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isSelected ? const Color(0xFFF62F56) : Colors.grey[300]!,
+          color: isSelected ? const Color(0xFF0B7D3B) : Colors.grey[300]!,
         ),
       ),
       showCheckmark: false,

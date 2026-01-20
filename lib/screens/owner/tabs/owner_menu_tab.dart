@@ -126,7 +126,7 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
                         icon: const Icon(Icons.swap_horiz, size: 16),
                         label: const Text('Change'),
                         style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFF62F56),
+                          foregroundColor: const Color(0xFF0B7D3B),
                         ),
                       ),
                     ],
@@ -299,7 +299,7 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
                                           Text(
                                             '₹${item.price}',
                                             style: GoogleFonts.urbanist(
-                                              color: const Color(0xFFF62F56),
+                                              color: const Color(0xFF0B7D3B),
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -380,7 +380,7 @@ class _OwnerMenuTabState extends ConsumerState<OwnerMenuTab> {
             builder: (_) => ItemSheet(canteenId: selectedCanteen.id),
           );
         },
-        backgroundColor: const Color(0xFFF62F56),
+        backgroundColor: const Color(0xFF0B7D3B),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

@@ -250,7 +250,7 @@ class CartSheet extends ConsumerWidget {
                           style: GoogleFonts.urbanist(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFFF62F56),
+                            color: const Color(0xFF0B7D3B),
                           ),
                         ),
                       ],
@@ -280,7 +280,7 @@ class CartSheet extends ConsumerWidget {
                               );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF62F56),
+                          backgroundColor: const Color(0xFF0B7D3B),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),

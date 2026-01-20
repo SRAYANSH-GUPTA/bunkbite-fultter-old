@@ -31,13 +31,7 @@ class MenuItemCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Material(
         color: Colors.transparent,
@@ -91,7 +85,7 @@ class MenuItemCard extends ConsumerWidget {
 
               // Content Section
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 2),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -125,7 +119,7 @@ class MenuItemCard extends ConsumerWidget {
                         // Available Quantity
                         if (!isOutOfStock)
                           Text(
-                            '${item.availableQuantity}',
+                            '${item.availableQuantity} Left',
                             style: GoogleFonts.urbanist(
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
@@ -206,6 +200,7 @@ class MenuItemCard extends ConsumerWidget {
           },
           child: Container(
             width: double.infinity,
+            alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: const Icon(Icons.add, color: Colors.white, size: 20),
           ),
@@ -234,10 +229,7 @@ class MenuItemCard extends ConsumerWidget {
                   ref.read(cartProvider.notifier).removeItem(item);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.all(8),
                   child: const Icon(
                     Icons.remove,
                     size: 18,
@@ -273,10 +265,7 @@ class MenuItemCard extends ConsumerWidget {
                             .addItem(item, canteenId);
                       },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.all(8),
                   child: Icon(
                     Icons.add,
                     size: 18,

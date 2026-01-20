@@ -31,7 +31,7 @@ class OrderDetailsDialog extends StatelessWidget {
               children: [
                 Icon(
                   Icons.qr_code_scanner,
-                  color: const Color(0xFFF62F56),
+                  color: const Color(0xFF0B7D3B),
                   size: 32,
                 ),
                 const SizedBox(width: 12),
@@ -163,7 +163,7 @@ class OrderDetailsDialog extends StatelessWidget {
                   style: GoogleFonts.urbanist(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFF62F56),
+                    color: const Color(0xFF0B7D3B),
                   ),
                 ),
               ],

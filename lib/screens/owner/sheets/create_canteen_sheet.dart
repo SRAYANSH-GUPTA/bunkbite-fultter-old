@@ -114,7 +114,7 @@ class _CreateCanteenSheetState extends ConsumerState<CreateCanteenSheet> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF62F56),
+                    backgroundColor: const Color(0xFF0B7D3B),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),

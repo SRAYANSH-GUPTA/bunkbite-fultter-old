@@ -26,13 +26,13 @@ class BunkBiteApp extends StatelessWidget {
   ThemeData _buildTheme(Brightness brightness) {
     final baseTheme = ThemeData(
       brightness: brightness,
-      primaryColor: const Color(0xFFF62F56),
+      primaryColor: const Color(0xFF0B7D3B),
       scaffoldBackgroundColor: Colors.white,
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFF62F56),
+        seedColor: const Color(0xFF0B7D3B),
         brightness: brightness,
-        primary: const Color(0xFFF62F56),
+        primary: const Color(0xFF0B7D3B),
         error: Colors.red,
       ),
     );

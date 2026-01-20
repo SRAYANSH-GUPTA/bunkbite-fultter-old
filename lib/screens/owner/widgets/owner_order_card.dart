@@ -221,7 +221,7 @@ class OwnerOrderCard extends ConsumerWidget {
                     style: GoogleFonts.urbanist(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: const Color(0xFFF62F56),
+                      color: const Color(0xFF0B7D3B),
                     ),
                   ),
                 ],

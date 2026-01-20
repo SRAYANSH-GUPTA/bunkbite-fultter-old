@@ -25,6 +25,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(selectedTabProvider);
 
     return Scaffold(
+      extendBody:
+          true, // Fixes white screen by extending body behind floating navbar
       body: IndexedStack(index: currentIndex, children: _screens),
       bottomNavigationBar: CustomNavBar(
         selectedIndex: currentIndex,

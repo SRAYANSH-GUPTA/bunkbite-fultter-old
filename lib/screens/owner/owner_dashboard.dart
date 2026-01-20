@@ -45,7 +45,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
         },
         label: const Text('Scan QR'),
         icon: const Icon(Icons.qr_code_scanner),
-        backgroundColor: const Color(0xFFF62F56),
+        backgroundColor: const Color(0xFF0B7D3B),
         foregroundColor: Colors.white,
       ),
       body: ownerState.isLoading

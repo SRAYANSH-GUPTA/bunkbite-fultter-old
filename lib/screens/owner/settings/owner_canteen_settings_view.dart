@@ -262,7 +262,7 @@ class _OwnerCanteenSettingsViewState
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveHours,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF62F56),
+                  backgroundColor: const Color(0xFF0B7D3B),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -341,7 +341,7 @@ class _OwnerCanteenSettingsViewState
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Icon(Icons.access_time, color: Color(0xFFF62F56)),
+                const Icon(Icons.access_time, color: Color(0xFF0B7D3B)),
               ],
             ),
           ],

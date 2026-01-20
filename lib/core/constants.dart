@@ -11,7 +11,8 @@ class AppConstants {
   // static const String devBaseUrlPhysical = 'http://192.168.1.100:3000/api/v1';
 
   // Production URL
-  static const String prodBaseUrl = 'https://api.dranjali.tech/api/v1';
+  static const String prodBaseUrl =
+      'https://steellike-giana-periphrastic.ngrok-free.dev/api/v1';
 
   // Auto-select based on mode
   static String get baseUrl {
@@ -22,6 +23,8 @@ class AppConstants {
   }
 
   static const String authTokenKey = 'auth_token';
+  static const String userEmailKey = 'user_email';
+  static const String userNameKey = 'user_name';
   static const String userIdKey = 'user_id';
   static const String userRoleKey = 'user_role';
 }

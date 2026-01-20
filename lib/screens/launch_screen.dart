@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
@@ -42,10 +44,20 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
   }
 
   Future<void> _startAnimation() async {
-    await _controller.forward();
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstRun = prefs.getBool('is_first_run') ?? true;
+
+    if (isFirstRun) {
+      // Play full animation for first run
+      await _controller.forward();
+      await prefs.setBool('is_first_run', false);
+    } else {
+      // Skip animation, just check auth and navigate
+      _controller.value = 1.0;
+    }
 
     try {
-      // Check Auth Status
+      // Check Auth Status always
       await ref.read(authProvider.notifier).checkAuthStatus();
     } catch (e) {
       debugPrint('Auth check failed: $e');
@@ -86,11 +98,10 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
           children: [
             ScaleTransition(
               scale: _scaleAnimation,
-              child: Image.asset(
-                'assets/images/Screenshot 2026-01-17 154701.png',
-                width: 180,
-                height: 180,
-                fit: BoxFit.contain,
+              child: SvgPicture.asset(
+                'assets/Vector.svg',
+                width: 250,
+                height: 250,
               ),
             ),
             const SizedBox(height: 30),

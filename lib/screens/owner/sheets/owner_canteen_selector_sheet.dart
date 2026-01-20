@@ -87,7 +87,7 @@ class OwnerCanteenSelectorSheet extends ConsumerWidget {
                       child: Icon(
                         Icons.store,
                         color: isSelected
-                            ? const Color(0xFFF62F56)
+                            ? const Color(0xFF0B7D3B)
                             : Colors.grey,
                       ),
                     ),
@@ -95,7 +95,7 @@ class OwnerCanteenSelectorSheet extends ConsumerWidget {
                       canteen.name,
                       style: GoogleFonts.urbanist(
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? const Color(0xFFF62F56) : null,
+                        color: isSelected ? const Color(0xFF0B7D3B) : null,
                       ),
                     ),
                     subtitle: Text(
@@ -108,7 +108,7 @@ class OwnerCanteenSelectorSheet extends ConsumerWidget {
                     trailing: isSelected
                         ? const Icon(
                             Icons.check_circle,
-                            color: Color(0xFFF62F56),
+                            color: Color(0xFF0B7D3B),
                           )
                         : null,
                   );
@@ -130,7 +130,7 @@ class OwnerCanteenSelectorSheet extends ConsumerWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF62F56),
+                backgroundColor: const Color(0xFF0B7D3B),
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),

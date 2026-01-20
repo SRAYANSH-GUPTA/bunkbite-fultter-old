@@ -7,7 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/tab_provider.dart';
 import 'login_sheet.dart';
-import 'cart_sheet.dart';
+
 import '../providers/cart_provider.dart';
 import '../models/order_model.dart';
 import '../models/menu_item_model.dart';
@@ -67,7 +67,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF62F56),
+                  backgroundColor: const Color(0xFF0B7D3B),
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Login / Register'),
@@ -109,64 +109,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           'My Orders',
           style: GoogleFonts.urbanist(fontWeight: FontWeight.bold),
         ),
-        actions: [
-          // Global Cart Icon
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => CartSheet(
-                  onBrowseMenu: () {
-                    ref.read(selectedTabProvider.notifier).state = 0;
-                  },
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: ['All', 'Pending', 'Active', 'Completed', 'Cancelled']
-                  .map((filter) {
-                    final isSelected = _filter == filter;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: FilterChip(
-                        label: Text(filter),
-                        selected: isSelected,
-                        selectedColor: const Color(0xFFE5F5ED),
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? const Color(0xFF0B7D3B)
-                              : Colors.black,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                        onSelected: (val) {
-                          setState(() {
-                            _filter = filter;
-                          });
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    );
-                  })
-                  .toList(),
-            ),
-          ),
-          const SizedBox(height: 10),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          const SizedBox(height: 16),
 
           Expanded(
             child: ordersState.isLoading
@@ -273,31 +220,52 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   }
 
   Widget _buildOrderCard(BuildContext context, OrderModel order) {
-    // Status badge styling
+    // Status styling based on mockup
     Color statusBgColor;
     Color statusTextColor;
+    Color statusBorderColor;
     String statusText;
+    IconData statusIcon;
 
     if (order.status == 'cancelled') {
       statusBgColor = const Color(0xFFFFE5EC);
       statusTextColor = const Color(0xFFFF4D6D);
+      statusBorderColor = const Color(0xFFFF4D6D);
       statusText = 'Cancelled';
+      statusIcon = Icons
+          .cancel; // No icon in mockup but used for structure? Mockup has no icon for cancelled?
+      // Actually mockup shows "Cancelled" in red pill, no icon visible in the pill?
+      // Wait, top image shows "Cooking" with clock icon. Bottom shows "Cancelled" text only?
+      // User says "including label of order with border".
+      // Top: Green pill with Clock + Cooking.
+      // Bottom: Red pill "Cancelled" (maybe no icon).
+      // I'll add icon conditionally if needed, or just text.
+      // Mockup bottom: Red border pill, "Cancelled".
+      statusIcon = Icons.info; // Placeholder
     } else if (order.status == 'completed') {
       statusBgColor = const Color(0xFFE5F5ED);
       statusTextColor = const Color(0xFF0B7D3B);
+      statusBorderColor = const Color(0xFF0B7D3B);
       statusText = 'Completed';
+      statusIcon = Icons.check_circle_outline;
     } else if (order.status == 'ready') {
       statusBgColor = const Color(0xFFE5F5ED);
       statusTextColor = const Color(0xFF0B7D3B);
+      statusBorderColor = const Color(0xFF0B7D3B);
       statusText = 'Ready';
+      statusIcon = Icons.check_circle_outline;
     } else if (order.status == 'preparing') {
       statusBgColor = const Color(0xFFE5F5ED);
       statusTextColor = const Color(0xFF0B7D3B);
+      statusBorderColor = const Color(0xFF0B7D3B);
       statusText = 'Cooking';
+      statusIcon = Icons.schedule;
     } else {
       statusBgColor = const Color(0xFFFFF4E5);
       statusTextColor = const Color(0xFFFF9800);
+      statusBorderColor = const Color(0xFFFF9800);
       statusText = 'Pending';
+      statusIcon = Icons.hourglass_empty;
     }
 
     // Format Date: Jan 13, 7:11 PM
@@ -311,7 +279,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     String itemSummary = '';
     if (order.items.isNotEmpty) {
       final firstItem = order.items.first;
-      itemSummary = '${firstItem.name} ×${firstItem.quantity}';
+      itemSummary =
+          '${firstItem.name} x${firstItem.quantity}'; // Mockup uses x1
     }
 
     return Container(
@@ -332,8 +301,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 'ORD-${order.orderId}',
                 style: GoogleFonts.urbanist(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black87,
+                  fontSize: 16,
+                  color: Colors.black,
                 ),
               ),
               Container(
@@ -342,21 +311,17 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: statusBgColor,
+                  color: statusBgColor.withOpacity(0.1), // Light bg
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusBorderColor),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusTextColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
+                    if (order.status == 'preparing') ...[
+                      Icon(statusIcon, size: 14, color: statusTextColor),
+                      const SizedBox(width: 4),
+                    ],
                     Text(
                       statusText,
                       style: GoogleFonts.urbanist(
@@ -370,27 +335,34 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
           // Date
           Text(
             formattedDate,
-            style: GoogleFonts.urbanist(fontSize: 12, color: Colors.grey[600]),
+            style: GoogleFonts.urbanist(fontSize: 13, color: Colors.grey[500]),
           ),
           const SizedBox(height: 12),
 
           // Item count
           Text(
-            '${order.items.length} Item${order.items.length > 1 ? 's' : ''}',
-            style: GoogleFonts.urbanist(fontSize: 13, color: Colors.grey[700]),
+            '${order.items.length} item${order.items.length > 1 ? 's' : ''}',
+            style: GoogleFonts.urbanist(fontSize: 13, color: Colors.grey[500]),
           ),
           const SizedBox(height: 4),
 
-          // Item summary
+          // Item summary (Main Text)
           Text(
             itemSummary,
-            style: GoogleFonts.urbanist(fontSize: 13, color: Colors.grey[700]),
+            style: GoogleFonts.urbanist(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
           ),
+          const SizedBox(height: 16),
+
+          Divider(height: 1, color: Colors.grey[200]),
           const SizedBox(height: 12),
 
           // Total
@@ -399,8 +371,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               Text(
                 'Total',
                 style: GoogleFonts.urbanist(
-                  fontSize: 13,
-                  color: Colors.grey[700],
+                  fontSize: 14,
+                  color: Colors.grey[500],
                 ),
               ),
               const Spacer(),
@@ -409,7 +381,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 style: GoogleFonts.urbanist(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: const Color(0xFF0B7D3B), // Green total
                 ),
               ),
             ],
@@ -420,7 +392,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -429,12 +401,14 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       ),
                     );
                   },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[300]!),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEBEBEB),
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
                   ),
                   child: Text(
                     'View Details',
@@ -481,7 +455,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                           );
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A1A1A),
+                    backgroundColor: const Color(
+                      0xFF131824,
+                    ), // Dark blueish black
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -498,7 +474,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                             : Icons.refresh,
                         size: 16,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Text(
                         order.paymentStatus == 'pending' &&
                                 order.status != 'cancelled'

@@ -50,7 +50,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final canteenState = ref.watch(canteenProvider);
-    bool isSearching = _focusNode.hasFocus;
 
     // Filtering Logic
     final filteredMenu = canteenState.menu.where((item) {
@@ -79,93 +78,90 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // --- 1. BACKGROUND LAYER (Tabs & Results) ---
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.transparent,
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          width: double.infinity,
+          constraints: BoxConstraints(
+            maxHeight:
+                MediaQuery.of(context).size.height *
+                0.85, // Limit height to keep sheet feel
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(30),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Wrap content height
               children: [
-                // Gap for the floating search bar (adjust height based on search bar size)
-                const SizedBox(height: 85),
-
-                _buildCategoryTabs(),
-
-                const SizedBox(height: 16),
-
-                Expanded(
-                  child: Stack(
+                // Search Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  child: Row(
                     children: [
-                      _buildResultsGrid(filteredMenu, canteenState),
-
-                      // --- 2. DIM OVERLAY LAYER ---
-                      if (isSearching)
-                        GestureDetector(
-                          onTap: () => _focusNode.unfocus(),
-                          child: Container(
-                            color: Colors.black.withOpacity(0.5),
-                          ),
-                        ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(Icons.arrow_back_ios_new, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildSearchBar()),
                     ],
                   ),
                 ),
+
+                // Content (History or Results)
+                Flexible(
+                  child: _searchQuery.isEmpty
+                      ? (_recentSearches.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  20,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildRecentSearchesHeader(),
+                                    const SizedBox(height: 12),
+                                    _buildRecentSearchesWrap(),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink())
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildCategoryTabs(),
+                            const SizedBox(height: 10),
+                            Flexible(
+                              child: _buildResultsGrid(
+                                filteredMenu,
+                                canteenState,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+                // Bottom padding for aesthetics
+                const SizedBox(height: 10),
               ],
             ),
-
-            // --- 3. FLOATING SEARCH SECTION (White Header) ---
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.only(
-                  bottom: 20,
-                  left: 16,
-                  right: 16,
-                  top: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(30),
-                  ),
-                  boxShadow: isSearching
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize
-                      .min, // Allows container to grow with Wrap content
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.arrow_back_ios_new, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildSearchBar()),
-                      ],
-                    ),
-                    if (isSearching && _recentSearches.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      _buildRecentSearchesHeader(),
-                      const SizedBox(height: 12),
-                      _buildRecentSearchesWrap(), // Using Wrap instead of ListView
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -184,6 +180,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: TextField(
         controller: _searchController,
         focusNode: _focusNode,
+        autofocus: true, // Auto-focus to show keyboard and history immediately
         onChanged: (val) => setState(() => _searchQuery = val),
         style: GoogleFonts.urbanist(fontSize: 15),
         decoration: InputDecoration(

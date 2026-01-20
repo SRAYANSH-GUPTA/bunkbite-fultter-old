@@ -134,104 +134,143 @@ class _LoginSheetState extends ConsumerState<LoginSheet> {
 
     return Container(
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        left: 24,
+        right: 24,
+        top: 32,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
+          // Title
           Text(
-            _isOtpSent ? 'Verify OTP' : 'Login / Register',
+            _isOtpSent ? 'Verify OTP' : 'Welcome to BunkBite',
+            textAlign: TextAlign.center,
             style: GoogleFonts.urbanist(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+
+          // Subtitle
           Text(
             _isOtpSent
-                ? 'Enter the 6-digit code sent to ${_emailController.text}'
-                : 'Enter your email to continue',
-            style: GoogleFonts.urbanist(color: Colors.grey[600]),
+                ? 'Enter the 6- digit code sent to ${_emailController.text}'
+                : 'Order food from your favourite canteen',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.urbanist(fontSize: 14, color: Colors.grey[600]),
           ),
-          const SizedBox(height: 20),
-          if (!_isOtpSent)
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: 'Email Address',
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-              ),
-            )
-          else
-            TextField(
-              controller: _otpController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: 'Enter OTP',
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
+          const SizedBox(height: 32),
+
+          // Input Label (Welcome screen only)
+          if (!_isOtpSent) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Enter your Email',
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
                 ),
               ),
             ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 8),
+          ],
+
+          // Input Field
+          TextField(
+            controller: _isOtpSent ? _otpController : _emailController,
+            keyboardType: _isOtpSent
+                ? TextInputType.number
+                : TextInputType.emailAddress,
+            decoration: InputDecoration(
+              hintText: _isOtpSent ? 'Enter otp' : 'you@example.com',
+              hintStyle: GoogleFonts.urbanist(color: Colors.grey[500]),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[400]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[400]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.black, width: 1.5),
+              ),
+            ),
+          ),
+
+          // Resend Link (Verify screen only)
+          if (_isOtpSent) ...[
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Didn't receive code? ",
+                  style: GoogleFonts.urbanist(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    // Resend logic
+                    _handleSendOtp();
+                  },
+                  child: Text(
+                    'Resend',
+                    style: GoogleFonts.urbanist(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 24),
+
+          // Action Button
           SizedBox(
             width: double.infinity,
-            height: 55,
+            height: 54,
             child: ElevatedButton(
               onPressed: authState.isLoading
                   ? null
                   : (_isOtpSent ? _handleVerifyOtp : _handleSendOtp),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF62F56),
+                backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
                 elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: authState.isLoading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 24,
+                      height: 24,
                       child: CircularProgressIndicator(
                         color: Colors.white,
-                        strokeWidth: 2,
+                        strokeWidth: 2.5,
                       ),
                     )
                   : Text(

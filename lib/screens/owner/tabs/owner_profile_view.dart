@@ -56,7 +56,7 @@ class _OwnerProfileViewState extends ConsumerState<OwnerProfileView> {
                       shape: BoxShape.circle,
                       color: Colors.grey[200],
                       border: Border.all(
-                        color: const Color(0xFFF62F56),
+                        color: const Color(0xFF0B7D3B),
                         width: 2,
                       ),
                     ),
@@ -94,7 +94,7 @@ class _OwnerProfileViewState extends ConsumerState<OwnerProfileView> {
                     child: Text(
                       'ADMIN',
                       style: GoogleFonts.urbanist(
-                        color: const Color(0xFFF62F56),
+                        color: const Color(0xFF0B7D3B),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),

@@ -67,10 +67,17 @@ class AuthController extends StateNotifier<AuthState> {
         final token = storageService.getString(AppConstants.authTokenKey);
         if (token != null && !JwtDecoder.isExpired(token)) {
           Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+          // Restore from storage if not in token
+          final storedEmail = storageService.getString(
+            AppConstants.userEmailKey,
+          );
+          final storedName = storageService.getString(AppConstants.userNameKey);
+
           final user = User(
             id: decodedToken['id'] ?? decodedToken['_id'] ?? '',
-            email: decodedToken['email'] ?? 'user@example.com',
-            name: decodedToken['name'] ?? 'User',
+            email: decodedToken['email'] ?? storedEmail ?? 'user@example.com',
+            name: decodedToken['name'] ?? storedName ?? 'User',
             role: decodedToken['role'] ?? 'user',
           );
           state = state.copyWith(
@@ -133,14 +140,20 @@ class AuthController extends StateNotifier<AuthState> {
       // Decode Token to get User Details
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
 
+      // Determine final email and name
+      final finalEmail = decodedToken['email'] ?? email;
+      final finalName = decodedToken['name'] ?? email.split('@')[0];
+
+      // Save to storage for persistence
+      await storageService.setString(AppConstants.userEmailKey, finalEmail);
+      await storageService.setString(AppConstants.userNameKey, finalName);
+
       // Expected claims: { id: "...", email: "...", role: "...", name: "..." }
       // If name is missing, use email part.
       final user = User(
         id: decodedToken['id'] ?? decodedToken['_id'] ?? '',
-        email:
-            decodedToken['email'] ??
-            email, // Prioritize token, fallback to input
-        name: decodedToken['name'] ?? email.split('@')[0],
+        email: finalEmail,
+        name: finalName,
         role: decodedToken['role'] ?? 'user',
       );
 
@@ -161,6 +174,8 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> signOut() async {
     await storageService.remove(AppConstants.authTokenKey);
+    await storageService.remove(AppConstants.userEmailKey);
+    await storageService.remove(AppConstants.userNameKey);
     state = AuthState(isAuthenticated: false);
   }
 

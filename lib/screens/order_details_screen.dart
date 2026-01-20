@@ -122,7 +122,7 @@ class OrderDetailsScreen extends StatelessWidget {
                   const Icon(
                     Icons.thumb_up,
                     size: 80,
-                    color: Color(0xFFF62F56),
+                    color: Color(0xFF0B7D3B),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -203,7 +203,7 @@ class OrderDetailsScreen extends StatelessWidget {
                   style: GoogleFonts.urbanist(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFF62F56),
+                    color: const Color(0xFF0B7D3B),
                   ),
                 ),
               ],
