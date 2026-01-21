@@ -50,89 +50,61 @@ class CartSheet extends ConsumerWidget {
           Expanded(
             child: cartState.items.isEmpty
                 ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Header with back button
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: const Icon(Icons.arrow_back, size: 24),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'My Cart',
-                              style: GoogleFonts.urbanist(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 60,
+                          color: Colors.grey[400],
                         ),
                       ),
-                      const SizedBox(height: 60),
-                      // Empty state
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.shopping_bag_outlined,
-                                size: 60,
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                            const SizedBox(height: 30),
-                            Text(
-                              'Your cart is empty',
-                              style: GoogleFonts.urbanist(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Add items to get started',
-                              style: GoogleFonts.urbanist(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                onBrowseMenu?.call();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1A1A1A),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40,
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                              child: Text(
-                                'Browse Menu',
-                                style: GoogleFonts.urbanist(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 30),
+                      Text(
+                        'Your cart is empty',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Add items to get started',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onBrowseMenu?.call();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A1A1A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Text(
+                          'Browse Menu',
+                          style: GoogleFonts.urbanist(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -261,23 +233,59 @@ class CartSheet extends ConsumerWidget {
                       height: 55,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (!authState.isAuthenticated) {
-                            Navigator.pop(context);
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (_) => const LoginSheet(),
-                            );
-                            return;
-                          }
-                          // Proceed to Payment
-                          ref
-                              .read(paymentProvider.notifier)
-                              .initiateCheckout(
-                                context,
-                                cartState.canteenId!,
-                                cartState.items.values.toList(),
+                          try {
+                            debugPrint('🔵 Checkout button pressed');
+
+                            if (cartState.canteenId == null) {
+                              debugPrint('❌ Error: Canteen ID is null');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Error: Canteen information missing. Please try clearing cart.',
+                                  ),
+                                ),
                               );
+                              return;
+                            }
+
+                            if (!authState.isAuthenticated) {
+                              debugPrint(
+                                '🔴 User not authenticated, showing login',
+                              );
+                              Navigator.pop(context);
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (_) => const LoginSheet(),
+                              );
+                              return;
+                            }
+
+                            debugPrint(
+                              '✅ User authenticated, initiating payment',
+                            );
+                            debugPrint('📦 Canteen ID: ${cartState.canteenId}');
+                            debugPrint(
+                              '📦 Items count: ${cartState.items.length}',
+                            );
+
+                            // Proceed to Payment
+                            ref
+                                .read(paymentProvider.notifier)
+                                .initiateCheckout(
+                                  context,
+                                  cartState.canteenId!,
+                                  cartState.items.values.toList(),
+                                );
+                          } catch (e, stack) {
+                            debugPrint(
+                              '❌ CRITICAL ERROR in Checkout Button: $e',
+                            );
+                            debugPrint('Stack trace: $stack');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('System Error: $e')),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0B7D3B),

@@ -85,7 +85,12 @@ class MenuItemCard extends ConsumerWidget {
 
               // Content Section
               Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 2),
+                padding: const EdgeInsets.fromLTRB(
+                  10,
+                  10,
+                  10,
+                  10,
+                ), // Added bottom padding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

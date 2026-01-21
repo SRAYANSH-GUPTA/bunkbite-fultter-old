@@ -7,7 +7,7 @@ import '../models/order_model.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/orders_provider.dart';
-import '../screens/order_details_screen.dart';
+import '../screens/order_success_screen.dart';
 import '../widgets/error_dialog.dart';
 
 // Helper function to get user-friendly error messages
@@ -67,6 +67,10 @@ class PaymentController extends StateNotifier<PaymentState> {
     String canteenId,
     List<OrderLineItem> items,
   ) async {
+    debugPrint('💳 ========== PAYMENT INITIATION START ==========');
+    debugPrint('💳 Canteen ID: $canteenId');
+    debugPrint('💳 Items: ${items.length}');
+
     _context = context; // Store context for later use
     state = PaymentState(isLoading: true);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -74,17 +78,20 @@ class PaymentController extends StateNotifier<PaymentState> {
     );
     try {
       // 1. Create Order
+      debugPrint('💳 Step 1: Creating order...');
       final orderData = {
         'canteenId': canteenId,
         'items': items
             .map((i) => {'menuItemId': i.menuItemId, 'quantity': i.quantity})
             .toList(),
       };
+      debugPrint('💳 Order data: $orderData');
 
       final createRes = await _apiService.client.post(
         '/orders',
         data: orderData,
       );
+      debugPrint('💳 Order created successfully');
       // Create Order Response: { success: true, data: { orderId: ... } } ?
       // Prompt says POST /orders returns orderId?
       // Wait, prompt for POST /orders is vague on response structure, but likely { success, data }
@@ -98,48 +105,26 @@ class PaymentController extends StateNotifier<PaymentState> {
           responseData['_id'] ??
           responseData['id']; // Defensive
       _currentOrderId = orderId;
+      debugPrint('💳 Order ID: $orderId');
 
       // 2. Initiate Payment (Razorpay Order)
-      final payRes = await _apiService.client.post(
-        '/payments/initiate',
-        data: {'orderId': orderId},
-      );
-      // Response: { success: true, data: { razorpayOrderId: ..., amount: ..., razorpayKeyId: ... } }
-
-      final payData = payRes.data['data'];
-      final String razorpayOrderId = payData['razorpayOrderId'];
-      final int amount = payData['amount'];
-      // STRICT FIX: User says key comes as 'razorpayKeyId' or use 'keyId' as fallback
-      final String razorpayKey =
-          payData['razorpayKeyId'] ??
-          payData['keyId'] ??
-          "rzp_test_1DP5mmOlF5G5ag";
-
-      // Get User Details
-      final user = ref.read(authProvider).user;
-      final userEmail = user?.email ?? 'student@example.com';
-      final phone = '9000090000'; // Placeholder
-
-      // STRICT iOS Standard Options
-      var options = {
-        'key': razorpayKey,
-        'amount': amount,
-        'name': 'BunkBite',
-        'description': 'Payment for Order $orderId',
-        'order_id': razorpayOrderId,
-        'prefill': {'contact': phone, 'email': userEmail},
-        'theme': {
-          'color': '#667eea', // STRICT requirement
-        },
-        'external': {
-          'wallets': ['paytm'],
-        },
-        'retry': {'enabled': true, 'max_count': 1},
-        'send_sms_hash': true,
-      };
-
-      _razorpay.open(options);
+      debugPrint('💳 Step 2: Delegating to initiatePaymentForExistingOrder...');
+      // Delegate to the working method
+      if (context.mounted) {
+        initiatePaymentForExistingOrder(context, orderId);
+      } else {
+        debugPrint('❌ Context not mounted, cannot initiate payment');
+      }
+      debugPrint('💳 Order creation flow complete (delegated)');
     } catch (e) {
+      debugPrint('❌ Payment initiation error: $e');
+      debugPrint('❌ Error type: ${e.runtimeType}');
+      if (e is DioException) {
+        debugPrint('❌ DioException details:');
+        debugPrint('   - Status code: ${e.response?.statusCode}');
+        debugPrint('   - Response data: ${e.response?.data}');
+        debugPrint('   - Message: ${e.message}');
+      }
       final friendlyError = _getUserFriendlyError(e);
       state = PaymentState(isLoading: false, error: friendlyError);
       if (context.mounted) {
@@ -242,17 +227,10 @@ class PaymentController extends StateNotifier<PaymentState> {
       // Refresh orders list
       ref.read(ordersProvider.notifier).fetchOrders();
 
-      // Navigate to order details screen
+      // Navigate to order success screen
       if (_context != null && _context!.mounted) {
         Navigator.of(_context!).pushReplacement(
-          MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: order)),
-        );
-
-        ScaffoldMessenger.of(_context!).showSnackBar(
-          const SnackBar(
-            content: Text('Payment successful! Order placed.'),
-            backgroundColor: Colors.green,
-          ),
+          MaterialPageRoute(builder: (_) => OrderSuccessScreen(order: order)),
         );
       }
     } catch (e) {
