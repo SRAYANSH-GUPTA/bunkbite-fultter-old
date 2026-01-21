@@ -1,0 +1,96 @@
+﻿Analyzing bunkbite...                                           
+
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:30:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:33:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:34:37 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:38:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:41:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:45:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:47:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\api_service.dart:48:13 - avoid_print
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\providers\auth_provider.dart:3:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:94:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:101:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:107:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:121:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:128:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:135:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:144:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:157:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\auth_provider.dart:162:7 - avoid_print
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\providers\canteen_provider.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:81:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:85:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:89:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:92:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:96:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:98:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\canteen_provider.dart:103:7 - avoid_print
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\providers\cart_provider.dart:2:8 - unnecessary_import
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\providers\orders_provider.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\providers\orders_provider.dart:23:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\orders_provider.dart:31:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\orders_provider.dart:34:7 - avoid_print
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\providers\owner_provider.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:111:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:144:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:151:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:160:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:161:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:165:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:169:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:216:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:230:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\owner_provider.dart:258:7 - avoid_print
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\providers\payment_provider.dart:3:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:102:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:110:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:126:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\providers\payment_provider.dart:131:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:160:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:170:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:171:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:172:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:177:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:192:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\providers\payment_provider.dart:219:7 - avoid_print
+warning - Unused import: 'package:google_fonts/google_fonts.dart' - lib\screens\main_screen.dart:3:8 - unused_import
+warning - The declaration '_showLogin' isn't referenced - lib\screens\menu_screen.dart:27:8 - unused_element
+   info - Unnecessary use of 'toList' in a spread - lib\screens\order_details_screen.dart:188:18 - unnecessary_to_list_in_spreads
+warning - Unnecessary type check; the result is always 'true' - lib\screens\orders_screen.dart:308:37 - unnecessary_type_check
+warning - Dead code - lib\screens\orders_screen.dart:310:25 - dead_code
+   info - Don't invoke 'print' in production code - lib\screens\owner\camera\qr_scanner_view.dart:146:7 - avoid_print
+   info - Statements in an if should be enclosed in a block - lib\screens\owner\settings\owner_canteen_settings_view.dart:66:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\owner\settings\owner_canteen_settings_view.dart:68:11 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps - lib\screens\owner\settings\owner_canteen_settings_view.dart:112:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\owner\settings\owner_canteen_settings_view.dart:120:28 - use_build_context_synchronously
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\owner\settings\owner_canteen_settings_view.dart:196:23 - deprecated_member_use
+warning - The value of the local variable 'totalOrders' isn't used - lib\screens\owner\tabs\analytics_view.dart:316:11 - unused_local_variable
+warning - The operand can't be 'null', so the condition is always 'false' - lib\screens\owner\tabs\owner_menu_tab.dart:364:31 - unnecessary_null_comparison
+warning - Dead code - lib\screens\owner\tabs\owner_menu_tab.dart:364:40 - dead_code
+   info - Statements in an if should be enclosed in a block - lib\screens\owner\tabs\owner_orders_tab.dart:40:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\owner\widgets\owner_order_card.dart:237:23 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\owner\widgets\owner_order_card.dart:239:23 - curly_braces_in_flow_control_structures
+   info - The import of 'package:state_notifier/state_notifier.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_riverpod/flutter_riverpod.dart' - lib\test_compile.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\test_compile.dart:15:3 - avoid_print
+   info - Don't invoke 'print' in production code - read_log.dart:10:9 - avoid_print
+   info - Don't invoke 'print' in production code - read_log.dart:13:7 - avoid_print
+   info - Don't invoke 'print' in production code - read_log.dart:16:7 - avoid_print
+   info - Don't invoke 'print' in production code - read_log.dart:19:5 - avoid_print
+
+flutter : 77 issues found. 
+(ran in 4.8s)
+At line:1 char:1
++ flutter analyze 2>&1 | 
+Out-File -FilePath 
+analysis.txt -Encoding utf8 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (77 is  
+  sues found. (ran in 4.8   
+ s):String) [], RemoteEx    
+ception
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
