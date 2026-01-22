@@ -32,9 +32,14 @@ String _getUserFriendlyError(dynamic error) {
     } else if (error.type == DioExceptionType.connectionError) {
       return 'No internet connection. Please check your network.';
     }
-    return error.response?.data['message']?.toString() ??
-        error.response?.data['error']?.toString() ??
-        'Something went wrong. Please try again.';
+    final msg =
+        error.response?.data['message']?.toString() ??
+        error.response?.data['error']?.toString();
+
+    if (msg != null && msg.isNotEmpty && msg.toLowerCase() != 'undefined') {
+      return msg;
+    }
+    return 'Something went wrong. Please try again.';
   }
   return 'An unexpected error occurred. Please try again.';
 }
@@ -62,7 +67,7 @@ class PaymentController extends StateNotifier<PaymentState> {
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
   }
 
-  void initiateCheckout(
+  Future<void> initiateCheckout(
     BuildContext context,
     String canteenId,
     List<OrderLineItem> items,
@@ -82,7 +87,14 @@ class PaymentController extends StateNotifier<PaymentState> {
       final orderData = {
         'canteenId': canteenId,
         'items': items
-            .map((i) => {'menuItemId': i.menuItemId, 'quantity': i.quantity})
+            .map(
+              (i) => {
+                'menuItemId': i.menuItemId,
+                'name': i.name,
+                'price': i.price,
+                'quantity': i.quantity,
+              },
+            )
             .toList(),
       };
       debugPrint('💳 Order data: $orderData');
@@ -109,32 +121,35 @@ class PaymentController extends StateNotifier<PaymentState> {
 
       // 2. Initiate Payment (Razorpay Order)
       debugPrint('💳 Step 2: Delegating to initiatePaymentForExistingOrder...');
-      // Delegate to the working method
+      print('DEBUG: Checking context mounted: ${context.mounted}');
       if (context.mounted) {
-        initiatePaymentForExistingOrder(context, orderId);
+        await initiatePaymentForExistingOrder(context, orderId);
       } else {
         debugPrint('❌ Context not mounted, cannot initiate payment');
       }
       debugPrint('💳 Order creation flow complete (delegated)');
     } catch (e) {
+      print('❌ CRITICAL CHECKOUT ERROR: $e'); // RAW PRINT for visibility
       debugPrint('❌ Payment initiation error: $e');
       debugPrint('❌ Error type: ${e.runtimeType}');
       if (e is DioException) {
-        debugPrint('❌ DioException details:');
-        debugPrint('   - Status code: ${e.response?.statusCode}');
-        debugPrint('   - Response data: ${e.response?.data}');
-        debugPrint('   - Message: ${e.message}');
+        print('❌ Dio Error: ${e.message}, ${e.response?.statusCode}');
       }
+
       final friendlyError = _getUserFriendlyError(e);
       state = PaymentState(isLoading: false, error: friendlyError);
+
+      print('❓ Context mounted? ${context.mounted}');
       if (context.mounted) {
         ErrorDialog.show(context, friendlyError, title: 'Checkout Failed');
+      } else {
+        print('⚠️ Context unmounted. Error dialog skipped.');
       }
     }
   }
 
   // New method for paying existing pending orders
-  void initiatePaymentForExistingOrder(
+  Future<void> initiatePaymentForExistingOrder(
     BuildContext context,
     String orderId,
   ) async {
@@ -251,9 +266,12 @@ class PaymentController extends StateNotifier<PaymentState> {
       error: 'Payment Failed: ${response.message ?? "Payment was cancelled"}',
     );
     if (_context != null && _context!.mounted) {
-      final errorMessage = response.message?.isNotEmpty == true
-          ? response.message!
-          : 'Payment was cancelled or failed. Please try again.';
+      String errorMessage = response.message ?? '';
+      if (errorMessage.isEmpty ||
+          errorMessage.toLowerCase().contains('undefined')) {
+        errorMessage =
+            'Payment was cancelled or failed due to a network issue. Please try again.';
+      }
 
       ErrorDialog.show(_context!, errorMessage, title: 'Payment Failed');
     }

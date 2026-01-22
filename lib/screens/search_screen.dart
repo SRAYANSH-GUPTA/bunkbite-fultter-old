@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/canteen_provider.dart';
 import '../widgets/menu_item_card.dart';
 
@@ -18,22 +19,47 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String _selectedCategory = 'All';
   final List<String> _categories = ['All', 'Meals', 'Snacks', 'Drinks'];
 
-  List<String> _recentSearches = [
-    'Burger',
-    'Chole samose',
-    'Chole bhature',
-    'Chole samose',
-    'Noodles',
-    'Pizza',
-  ];
+  List<String> _recentSearches = [];
+  bool _isLoadingHistory = true;
 
   @override
   void initState() {
     super.initState();
+    _loadHistory();
     // Listen to focus changes to update the UI (show/hide overlay)
     _focusNode.addListener(() {
       setState(() {});
     });
+  }
+
+  Future<void> _loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _recentSearches = prefs.getStringList('recent_searches') ?? [];
+      _isLoadingHistory = false;
+    });
+  }
+
+  Future<void> _addToHistory(String query) async {
+    if (query.trim().isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    List<String> history = prefs.getStringList('recent_searches') ?? [];
+
+    // Remove if exists to move to top
+    history.remove(query);
+    // Add to start
+    history.insert(0, query);
+    // Limit to 5
+    if (history.length > 5) {
+      history = history.sublist(0, 5);
+    }
+
+    await prefs.setStringList('recent_searches', history);
+    if (mounted) {
+      setState(() {
+        _recentSearches = history;
+      });
+    }
   }
 
   @override
@@ -43,7 +69,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
-  void _clearHistory() {
+  Future<void> _clearHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('recent_searches');
     setState(() => _recentSearches.clear());
   }
 
@@ -79,87 +107,104 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          width: double.infinity,
-          constraints: BoxConstraints(
-            maxHeight:
-                MediaQuery.of(context).size.height *
-                0.85, // Limit height to keep sheet feel
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(30),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+      body: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        behavior: HitTestBehavior.translucent, // Hit empty space
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when tapping inside the sheet
+            child: Container(
+              width: double.infinity,
+              constraints: BoxConstraints(
+                maxHeight:
+                    MediaQuery.of(context).size.height *
+                    0.85, // Limit height to keep sheet feel
               ),
-            ],
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // Wrap content height
-              children: [
-                // Search Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: const Icon(Icons.arrow_back_ios_new, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildSearchBar()),
-                    ],
-                  ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(30),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Wrap content height
+                  children: [
+                    // Search Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildSearchBar()),
+                        ],
+                      ),
+                    ),
 
-                // Content (History or Results)
-                Flexible(
-                  child: _searchQuery.isEmpty
-                      ? (_recentSearches.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  0,
-                                  16,
-                                  20,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                    // Content (History or Results)
+                    Flexible(
+                      child: _searchQuery.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (_recentSearches.isEmpty &&
+                                      !_isLoadingHistory) ...[
+                                    Text(
+                                      'Suggestions',
+                                      style: GoogleFonts.urbanist(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildSuggestionsWrap(),
+                                  ] else if (_recentSearches.isNotEmpty) ...[
                                     _buildRecentSearchesHeader(),
                                     const SizedBox(height: 12),
                                     _buildRecentSearchesWrap(),
                                   ],
-                                ),
-                              )
-                            : const SizedBox.shrink())
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildCategoryTabs(),
-                            const SizedBox(height: 10),
-                            Flexible(
-                              child: _buildResultsGrid(
-                                filteredMenu,
-                                canteenState,
+                                ],
                               ),
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildCategoryTabs(),
+                                const SizedBox(height: 10),
+                                Flexible(
+                                  child: _buildResultsGrid(
+                                    filteredMenu,
+                                    canteenState,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                    ),
+                    // Bottom padding for aesthetics
+                    const SizedBox(height: 10),
+                  ],
                 ),
-                // Bottom padding for aesthetics
-                const SizedBox(height: 10),
-              ],
+              ),
             ),
           ),
         ),
@@ -181,6 +226,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         controller: _searchController,
         focusNode: _focusNode,
         autofocus: true, // Auto-focus to show keyboard and history immediately
+        onSubmitted: (val) => _addToHistory(val), // Add on Submit
         onChanged: (val) => setState(() => _searchQuery = val),
         style: GoogleFonts.urbanist(fontSize: 15),
         decoration: InputDecoration(
@@ -191,6 +237,48 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
+    );
+  }
+
+  Widget _buildSuggestionsWrap() {
+    final suggestions = ['Pizza', 'Burger', 'Sandwich'];
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 10.0,
+      children: suggestions.map((search) {
+        return GestureDetector(
+          onTap: () {
+            _addToHistory(search);
+            setState(() {
+              _searchQuery = search;
+              _searchController.text = search;
+              _focusNode.unfocus();
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.trending_up, size: 16, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(
+                  search,
+                  style: GoogleFonts.urbanist(
+                    fontSize: 13,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/auth_provider.dart';
 import '../models/menu_item_model.dart';
 import '../providers/cart_provider.dart';
-import '../screens/login_sheet.dart';
 
 class MenuItemCard extends ConsumerWidget {
   final MenuItem item;
@@ -89,8 +87,8 @@ class MenuItemCard extends ConsumerWidget {
                   10,
                   10,
                   10,
-                  10,
-                ), // Added bottom padding
+                  0,
+                ), // Outer bottom padding 0
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -134,8 +132,7 @@ class MenuItemCard extends ConsumerWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 6),
-
+                    const SizedBox(height: 4), // Reduced space above button
                     // Action Button
                     _buildActionButton(
                       context,
@@ -190,17 +187,6 @@ class MenuItemCard extends ConsumerWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: () {
-            // Auth Check
-            final auth = ref.read(authProvider);
-            if (!auth.isAuthenticated) {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => const LoginSheet(),
-              );
-              return;
-            }
             ref.read(cartProvider.notifier).addItem(item, canteenId);
           },
           child: Container(

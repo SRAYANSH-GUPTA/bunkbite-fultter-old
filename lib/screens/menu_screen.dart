@@ -8,6 +8,8 @@ import 'cart_screen.dart';
 import 'search_screen.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
+final searchVisibleProvider = StateProvider<bool>((ref) => true);
+
 class MenuScreen extends ConsumerStatefulWidget {
   const MenuScreen({super.key});
 
@@ -316,93 +318,108 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   const SizedBox(height: 16),
 
                   // Search Bar
-                  GestureDetector(
-                    onTap: () {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: 'Search',
-                        barrierColor: Colors.black54,
-                        transitionDuration: const Duration(milliseconds: 300),
-                        pageBuilder: (context, anim1, anim2) =>
-                            const SearchScreen(),
-                        transitionBuilder: (context, anim1, anim2, child) {
-                          return SlideTransition(
-                            position:
-                                Tween<Offset>(
-                                  begin: const Offset(0, -1),
-                                  end: Offset.zero,
-                                ).animate(
-                                  CurvedAnimation(
-                                    parent: anim1,
-                                    curve: Curves.easeOut,
-                                  ),
-                                ),
-                            child: child,
-                          );
-                        },
-                      );
-                    },
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Icon(
-                              Icons.search,
-                              color: Colors.grey[600],
-                              size: 22,
+                  Opacity(
+                    opacity: ref.watch(searchVisibleProvider) ? 1.0 : 0.0,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Hide Menu Search Bar
+                        ref.read(searchVisibleProvider.notifier).state = false;
+
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            opaque: false,
+                            barrierColor: Colors.black54,
+                            barrierDismissible: true,
+                            pageBuilder: (_, __, ___) => const SearchScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  );
+                                },
+                            transitionDuration: const Duration(
+                              milliseconds: 200,
                             ),
                           ),
-                          Row(
-                            children: [
-                              Text(
-                                'Search for ',
-                                style: GoogleFonts.urbanist(
-                                  color: Colors.grey[500],
-                                  fontSize: 15,
-                                ),
+                        ).then((_) {
+                          // Show Menu Search Bar when returning
+                          ref.read(searchVisibleProvider.notifier).state = true;
+                        });
+                      },
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
                               ),
-                              IgnorePointer(
-                                child: DefaultTextStyle(
+                              child: Icon(
+                                Icons.search,
+                                color: Colors.grey[600],
+                                size: 22,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  'Search for ',
                                   style: GoogleFonts.urbanist(
                                     color: Colors.grey[500],
                                     fontSize: 15,
                                   ),
-                                  child: AnimatedTextKit(
-                                    animatedTexts: [
-                                      TypewriterAnimatedText(
-                                        'food...',
-                                        speed: const Duration(
-                                          milliseconds: 100,
+                                ),
+                                IgnorePointer(
+                                  child: DefaultTextStyle(
+                                    style: GoogleFonts.urbanist(
+                                      color: Colors.grey[500],
+                                      fontSize: 15,
+                                    ),
+                                    child: AnimatedTextKit(
+                                      animatedTexts: [
+                                        TypewriterAnimatedText(
+                                          'Burger',
+                                          speed: const Duration(
+                                            milliseconds: 100,
+                                          ),
+                                          cursor: '',
                                         ),
-                                      ),
-                                      TypewriterAnimatedText(
-                                        '"Pizza"',
-                                        speed: const Duration(
-                                          milliseconds: 100,
+                                        TypewriterAnimatedText(
+                                          'Tea',
+                                          speed: const Duration(
+                                            milliseconds: 100,
+                                          ),
+                                          cursor: '',
                                         ),
-                                      ),
-                                      TypewriterAnimatedText(
-                                        '"Burger"',
-                                        speed: const Duration(
-                                          milliseconds: 100,
+                                        TypewriterAnimatedText(
+                                          'Pizza',
+                                          speed: const Duration(
+                                            milliseconds: 100,
+                                          ),
+                                          cursor: '',
                                         ),
-                                      ),
-                                    ],
-                                    repeatForever: true,
+                                      ],
+                                      repeatForever: true,
+                                      pause: const Duration(milliseconds: 1000),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -462,6 +479,51 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
             ),
 
             const SizedBox(height: 16),
+            if (canteenState.selectedCanteen != null &&
+                !canteenState.selectedCanteen!.isCurrentlyOpen)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A), // Black background
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Canteen is currently closed. Ordering is disabled.',
+                            style: GoogleFonts.urbanist(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Hours: ${canteenState.selectedCanteen!.openingTime} - ${canteenState.selectedCanteen!.closingTime}',
+                            style: GoogleFonts.urbanist(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Divider(height: 1, color: Colors.grey.shade300),
             const SizedBox(height: 16),
 
@@ -470,7 +532,27 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
               child: canteenState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : canteenState.canteens.isEmpty
-                  ? const Center(child: Text("No Canteens Available"))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("No Canteens Available"),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              ref
+                                  .read(canteenProvider.notifier)
+                                  .fetchCanteens();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Refresh'),
+                          ),
+                        ],
+                      ),
+                    )
                   : filteredMenu.isEmpty
                   ? Center(
                       child: Column(
@@ -489,6 +571,32 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              ref
+                                  .read(canteenProvider.notifier)
+                                  .fetchCanteens();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A1A1A),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                            icon: const Icon(Icons.refresh, size: 20),
+                            label: Text(
+                              'Refresh Menu',
+                              style: GoogleFonts.urbanist(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -500,26 +608,17 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            childAspectRatio: 0.68,
+                            childAspectRatio: 0.72,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
                           ),
                       itemCount: filteredMenu.length,
                       itemBuilder: (context, index) {
                         final item = filteredMenu[index];
-                        final isOpen =
-                            canteenState.selectedCanteen?.isCurrentlyOpen ??
-                            true;
-
-                        return Opacity(
-                          opacity: isOpen ? 1.0 : 0.6,
-                          child: AbsorbPointer(
-                            absorbing: !isOpen,
-                            child: MenuItemCard(
-                              item: item,
-                              canteenId: canteenState.selectedCanteen!.id,
-                            ),
-                          ),
+                        // Removed Opacity and AbsorbPointer to allow interactions
+                        return MenuItemCard(
+                          item: item,
+                          canteenId: canteenState.selectedCanteen!.id,
                         );
                       },
                     ),

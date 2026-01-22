@@ -35,6 +35,13 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
+    // Listen to Auth State logic to Auto-Fetch orders on login
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if ((previous?.isAuthenticated == false) && next.isAuthenticated) {
+        ref.read(ordersProvider.notifier).fetchOrders();
+      }
+    });
+
     // Show login prompt if not authenticated
     if (!authState.isAuthenticated || authState.user == null) {
       return Scaffold(
@@ -48,29 +55,64 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.receipt_long, size: 80, color: Colors.grey[300]),
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.receipt_long, // Keeping receipt, but styled
+                  size: 50,
+                  color: Colors.grey[400],
+                ),
+              ),
               const SizedBox(height: 20),
               Text(
                 'Login to view your orders',
                 style: GoogleFonts.urbanist(
                   fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Track your food status here',
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
                   color: Colors.grey[600],
                 ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => const LoginSheet(),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0B7D3B),
-                  foregroundColor: Colors.white,
+              const SizedBox(height: 32),
+              SizedBox(
+                width: 200,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const LoginSheet(),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A1A1A), // Black Button
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Login / Register',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                child: const Text('Login / Register'),
               ),
             ],
           ),
@@ -260,6 +302,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       statusBorderColor = const Color(0xFF0B7D3B);
       statusText = 'Cooking';
       statusIcon = Icons.schedule;
+    } else if (order.status == 'paid') {
+      statusBgColor = const Color(0xFFE3F2FD); // Light Blue
+      statusTextColor = const Color(0xFF1E88E5); // Blue
+      statusBorderColor = const Color(0xFF1E88E5);
+      statusText = 'Paid';
+      statusIcon = Icons.check_circle_outline;
     } else {
       statusBgColor = const Color(0xFFFFF4E5);
       statusTextColor = const Color(0xFFFF9800);
@@ -271,7 +319,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     // Format Date: Jan 13, 7:11 PM
     String formattedDate = order.createdAt;
     try {
-      final date = DateTime.parse(order.createdAt).toLocal();
+      String dateStr = order.createdAt;
+      if (!dateStr.endsWith('Z') && !dateStr.contains('+')) {
+        dateStr += 'Z'; // Assume UTC if no offset
+      }
+      final date = DateTime.parse(dateStr).toLocal();
       formattedDate = DateFormat('MMM dd, h:mm a').format(date);
     } catch (_) {}
 
@@ -298,7 +350,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'ORD-${order.orderId}',
+                '${order.orderId}',
                 style: GoogleFonts.urbanist(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,

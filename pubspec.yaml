@@ -49,6 +49,7 @@ dependencies:
   fl_chart: ^1.1.1
   url_launcher: ^6.3.2
   animated_text_kit: ^4.3.0
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:
@@ -65,9 +66,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/Screenshot 2026-01-17 154701.png"
+  image_path: "assets/images/logo.svg"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/Screenshot 2026-01-17 154701.png"
+  adaptive_icon_foreground: "assets/images/logo.svg"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

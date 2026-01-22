@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
+import '../providers/cart_provider.dart';
+import '../providers/orders_provider.dart';
 import '../providers/tab_provider.dart';
 import 'login_sheet.dart';
 import 'owner/owner_main_view.dart';
@@ -41,43 +44,64 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.account_circle,
-                          size: 80,
-                          color: Colors.grey[300],
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.person_outline, // Keeping person icon
+                            size: 50,
+                            color: Colors.grey[400],
+                          ),
                         ),
                         const SizedBox(height: 20),
                         Text(
                           'Login to view profile',
                           style: GoogleFonts.urbanist(
                             fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Manage your account details',
+                          style: GoogleFonts.urbanist(
+                            fontSize: 14,
                             color: Colors.grey[600],
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (_) => const LoginSheet(),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0B7D3B),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 12,
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: 200,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (_) => const LoginSheet(),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(
+                                0xFF1A1A1A,
+                              ), // Black Button
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Login / Register',
-                            style: GoogleFonts.urbanist(
-                              fontWeight: FontWeight.w600,
+                            child: Text(
+                              'Login / Register',
+                              style: GoogleFonts.urbanist(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -260,8 +284,81 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Logout',
                 textColor: Colors.red,
                 iconColor: Colors.red,
-                onTap: () async {
-                  await ref.read(authProvider.notifier).signOut();
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      title: Row(
+                        children: [
+                          const Icon(Icons.logout, color: Colors.red, size: 28),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Logout',
+                            style: GoogleFonts.urbanist(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                      content: Text(
+                        'Are you sure you want to logout? All your data including cart and search history will be cleared.',
+                        style: GoogleFonts.urbanist(fontSize: 16),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.urbanist(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(ctx); // Close dialog
+
+                            // 1. Clear Cart
+                            ref.read(cartProvider.notifier).clearCart();
+
+                            // 2. Clear Orders
+                            ref.read(ordersProvider.notifier).clearOrders();
+
+                            // 3. Clear Search History
+                            try {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.remove('recent_searches');
+                            } catch (e) {
+                              debugPrint('Failed to clear search history: $e');
+                            }
+
+                            // 4. Sign Out
+                            await ref.read(authProvider.notifier).signOut();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Logout',
+                            style: GoogleFonts.urbanist(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ],

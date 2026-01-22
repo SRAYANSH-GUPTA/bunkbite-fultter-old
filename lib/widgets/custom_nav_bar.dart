@@ -26,7 +26,7 @@ class CustomNavBar extends StatelessWidget {
           children: [
             _buildNavItem(
               index: 0,
-              icon: Icons.menu,
+              icon: Icons.restaurant_menu, // Fork and Menu icon
               label: 'Menu',
               isSelected: selectedIndex == 0,
             ),

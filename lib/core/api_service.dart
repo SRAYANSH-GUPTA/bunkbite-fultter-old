@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'constants.dart';
 import 'storage_service.dart';
 
+import 'package:flutter/foundation.dart';
+
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   late Dio _dio;
@@ -15,15 +17,25 @@ class ApiService {
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
         connectTimeout: const Duration(
-          seconds: 45,
-        ), // Increased for DNS resolution
-        receiveTimeout: const Duration(seconds: 45),
-        sendTimeout: const Duration(seconds: 45),
+          seconds: 10,
+        ), // Reduced for faster feedback
+        receiveTimeout: const Duration(seconds: 10),
+        sendTimeout: const Duration(seconds: 10),
         headers: {'Content-Type': 'application/json'},
       ),
     );
 
-    // Add retry interceptor for DNS failures
+    // Logging Interceptor for Debugging
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (kDebugMode) {
+            print('🌐 API Request: [${options.method}] ${options.uri}');
+          }
+          return handler.next(options);
+        },
+      ),
+    );
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (DioException error, handler) async {
@@ -64,4 +76,15 @@ class ApiService {
   }
 
   Dio get client => _dio;
+
+  Future<Map<String, dynamic>> getAppVersion() async {
+    try {
+      final response = await _dio.get('/app/version');
+      return response.data;
+    } catch (e) {
+      // In case of error (e.g. offline), we might want to let them pass or retry
+      // For now, rethrow or return empty to handle in UI
+      rethrow;
+    }
+  }
 }

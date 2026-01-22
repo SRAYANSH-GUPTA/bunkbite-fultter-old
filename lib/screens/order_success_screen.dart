@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:convert';
 import '../models/order_model.dart';
 import 'order_details_screen.dart';
 
@@ -64,7 +65,7 @@ class OrderSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                order.id,
+                'Order #${order.orderId}',
                 style: GoogleFonts.urbanist(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -81,12 +82,28 @@ class OrderSuccessScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: QrImageView(
-                  data: order.id,
-                  version: QrVersions.auto,
-                  size: 180,
-                  backgroundColor: Colors.white,
-                ),
+                child: order.qrCode != null && order.qrCode!.isNotEmpty
+                    ? SizedBox(
+                        width: 180,
+                        height: 180,
+                        child: Image.memory(
+                          base64Decode(
+                            order.qrCode!.replaceFirst(
+                              RegExp(r'data:image\/.*;base64,'),
+                              '',
+                            ),
+                          ),
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(child: Icon(Icons.error));
+                          },
+                        ),
+                      )
+                    : QrImageView(
+                        data: order.id,
+                        version: QrVersions.auto,
+                        size: 180,
+                        backgroundColor: Colors.white,
+                      ),
               ),
               const SizedBox(height: 12),
               Text(

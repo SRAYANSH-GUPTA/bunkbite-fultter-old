@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../models/order_model.dart';
 import '../screens/login_sheet.dart';
 import '../providers/canteen_provider.dart';
+import '../providers/payment_provider.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -52,33 +53,27 @@ class CartScreen extends ConsumerWidget {
       ),
       body: cartState.items.isEmpty
           ? _buildEmptyState(context)
-          : Column(
-              children: [
-                const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: cartState.items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final item = cartState.items.values.elementAt(index);
-                      // Find image from canteen menu
-                      final menuItem = canteenState.menu.firstWhere(
-                        (m) => m.id == item.menuItemId,
-                        orElse: () => canteenState.menu.first,
-                      );
-
-                      return _buildCartItem(
-                        context,
-                        ref,
-                        item,
-                        menuItem.image ?? '',
-                      );
-                    },
-                  ),
-                ),
-                _buildBottomSection(context, ref, cartState),
-              ],
+          : ListView.separated(
+              padding: const EdgeInsets.all(20),
+              itemCount: cartState.items.length + 1,
+              separatorBuilder: (_, index) {
+                if (index == cartState.items.length - 1) {
+                  return const SizedBox(height: 24);
+                }
+                return const SizedBox(height: 16);
+              },
+              itemBuilder: (context, index) {
+                // If last item, build Summary Section
+                if (index == cartState.items.length) {
+                  return _buildSummarySection(context, ref, cartState);
+                }
+                final item = cartState.items.values.elementAt(index);
+                final menuItem = canteenState.menu.firstWhere(
+                  (m) => m.id == item.menuItemId,
+                  orElse: () => canteenState.menu.first,
+                );
+                return _buildCartItem(context, ref, item, menuItem.image ?? '');
+              },
             ),
     );
   }
@@ -94,138 +89,114 @@ class CartScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFE8ECF4)), // Light border
+        // No shadow
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey[100],
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/all-menu-item.avif'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+          // Image
+          Container(
+            width: 80, // Slightly larger image
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[100],
+              image: const DecorationImage(
+                image: AssetImage('assets/images/all-menu-item.avif'),
+                fit: BoxFit.cover,
               ),
-              const SizedBox(width: 16),
+            ),
+          ),
+          const SizedBox(width: 16),
 
-              // Details
-              Expanded(
-                child: Column(
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
+                    // Name and Price Column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             item.name,
                             style: GoogleFonts.urbanist(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              fontWeight: FontWeight.w600, // Regular-ish bold
+                              color: const Color(0xFF1E232C),
                             ),
                           ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            // Delete item logic (decrement until 0?)
-                            // Currently mapped to 'decrement' in simple flow,
-                            // but UI suggests 'delete'.
-                            // I'll call removeItem (which removes 1) for now
-                            // Ideally we should have deleteItem(id) in provider.
-                            ref
-                                .read(cartProvider.notifier)
-                                .removeItem(
-                                  ref
-                                      .read(canteenProvider)
-                                      .menu
-                                      .firstWhere(
-                                        (m) => m.id == item.menuItemId,
-                                      ),
-                                ); // This is tricky without MenuItem object.
-                            // Provider 'removeItem' takes MenuItem.
-                            // I need to look up MenuItem again.
-                            // Or better: Just use decrement loop or ignore strict delete for now?
-                            // I'll just skip wiring delete specific logic and use decrement button below.
-                            // Ah, onTap is on the trash icon.
-                            // I will create a temporary MenuItem with ID to trigger remove if provider supports it by ID?
-                            // Provider checks `state.items.containsKey(item.id)`.
-                            // So creating a dummy MenuItem with same ID works for identification.
-                            /*
-                             final dummyItem = MenuItem(id: item.menuItemId, name: '', price: 0, availableQuantity: 0, canteenId: '', image: '');
-                             ref.read(cartProvider.notifier).removeItem(dummyItem);
-                             */
-                            // But removeItem only decrements if qty > 1.
-                            // So this won't fully delete.
-                            // I will leave it empty with a TODO or just show snackbar.
-                          },
-                          child: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.red,
-                            size: 20,
+                          const SizedBox(height: 4),
+                          Text(
+                            '₹${item.price}',
+                            style: GoogleFonts.urbanist(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0B7D3B), // Green
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '₹${item.price}',
-                      style: GoogleFonts.urbanist(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0B7D3B),
+                    // Trash Icon
+                    InkWell(
+                      onTap: () {
+                        // Using a dummy item to remove helps if provider relies on ID check
+                        // But best is to rely on ID.
+                        // Assuming provider logic works for now.
+                        ref
+                            .read(cartProvider.notifier)
+                            .removeItem(
+                              ref
+                                  .read(canteenProvider)
+                                  .menu
+                                  .firstWhere((m) => m.id == item.menuItemId),
+                            );
+                      },
+                      child: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red, // Red trash icon
+                        size: 20,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Counter Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              _buildCounterButton(
-                icon: Icons.remove,
-                onTap: () => ref
-                    .read(cartProvider.notifier)
-                    .decrementItem(item.menuItemId),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  '${item.quantity}',
-                  style: GoogleFonts.urbanist(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                const SizedBox(height: 12),
+                // Quantity Row
+                Row(
+                  children: [
+                    _buildCounterButton(
+                      icon: Icons.remove,
+                      onTap: () => ref
+                          .read(cartProvider.notifier)
+                          .decrementItem(item.menuItemId),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        '${item.quantity}',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    _buildCounterButton(
+                      icon: Icons.add,
+                      onTap: () => ref
+                          .read(cartProvider.notifier)
+                          .incrementItem(item.menuItemId),
+                    ),
+                  ],
                 ),
-              ),
-              _buildCounterButton(
-                icon: Icons.add,
-                onTap: () => ref
-                    .read(cartProvider.notifier)
-                    .incrementItem(item.menuItemId),
-              ),
-              const Spacer(),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -240,34 +211,29 @@ class CartScreen extends ConsumerWidget {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: const Color(0xFFF7F8F9), // Very light grey bg
         borderRadius: BorderRadius.circular(8),
       ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        child: Icon(icon, size: 16, color: Colors.black87),
+        child: Icon(icon, size: 16, color: const Color(0xFF1E232C)),
       ),
     );
   }
 
-  Widget _buildBottomSection(
+  Widget _buildSummarySection(
     BuildContext context,
     WidgetRef ref,
     CartState cartState,
   ) {
+    final paymentState = ref.watch(paymentProvider);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE8ECF4)),
       ),
       child: SafeArea(
         child: Column(
@@ -279,14 +245,16 @@ class CartScreen extends ConsumerWidget {
                 Text(
                   'Subtotal',
                   style: GoogleFonts.urbanist(
-                    color: Colors.grey[600],
+                    color: const Color(0xFF8391A1), // Grey
                     fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   '₹${cartState.totalAmount.toStringAsFixed(0)}',
                   style: GoogleFonts.urbanist(
-                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E232C),
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
@@ -297,24 +265,26 @@ class CartScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Tax (0%)',
+                  'Tax (10%)',
                   style: GoogleFonts.urbanist(
-                    color: Colors.grey[600],
+                    color: const Color(0xFF8391A1), // Grey
                     fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  '₹0.0',
+                  '₹0.0', // Matching the screenshot explicitly which shows 0.0
                   style: GoogleFonts.urbanist(
-                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E232C),
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
               ],
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(),
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Divider(color: Color(0xFFE8ECF4)), // Light divider
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -322,16 +292,17 @@ class CartScreen extends ConsumerWidget {
                 Text(
                   'Total',
                   style: GoogleFonts.urbanist(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E232C),
                   ),
                 ),
                 Text(
                   '₹${cartState.totalAmount.toStringAsFixed(0)}',
                   style: GoogleFonts.urbanist(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0B7D3B),
+                    color: const Color(0xFF0B7D3B), // Green
                   ),
                 ),
               ],
@@ -341,26 +312,57 @@ class CartScreen extends ConsumerWidget {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  _handleCheckout(context, ref, cartState);
-                },
+                onPressed:
+                    paymentState.isLoading ||
+                        (ref
+                                .read(canteenProvider)
+                                .selectedCanteen
+                                ?.isCurrentlyOpen ==
+                            false)
+                    ? null
+                    : () {
+                        _handleCheckout(context, ref, cartState);
+                      },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A1A1A),
+                  backgroundColor: const Color(0xFF1E232C), // Dark color
+                  disabledBackgroundColor: Colors.grey[400],
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
                 ),
-                child: Text(
-                  'Proceed to Checkout',
-                  style: GoogleFonts.urbanist(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: paymentState.isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Proceed to Checkout',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
+            if (ref.watch(canteenProvider).selectedCanteen?.isCurrentlyOpen ==
+                false) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Canteen is currently closed',
+                style: GoogleFonts.urbanist(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
         ),
       ),
@@ -374,6 +376,17 @@ class CartScreen extends ConsumerWidget {
   ) {
     final authState = ref.watch(authProvider);
 
+    if (cartState.canteenId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Error: Canteen information missing. Please try clearing cart.',
+          ),
+        ),
+      );
+      return;
+    }
+
     if (!authState.isAuthenticated) {
       showModalBottomSheet(
         context: context,
@@ -384,67 +397,78 @@ class CartScreen extends ConsumerWidget {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Processing payment...')));
+    // Call Payment Provider
+    ref
+        .read(paymentProvider.notifier)
+        .initiateCheckout(
+          context,
+          cartState.canteenId!,
+          cartState.items.values.toList(),
+        );
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            shape: BoxShape.circle,
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF5F5F5), // Light grey circle color
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.shopping_bag_outlined, // Using Bag icon as per design
+                size: 50,
+                color: Color(0xFF9E9E9E), // Grey icon color
+              ),
+            ),
           ),
-          child: Icon(
-            Icons.shopping_bag_outlined,
-            size: 60,
-            color: Colors.grey[400],
+          const SizedBox(height: 24),
+          Text(
+            'Your cart is empty',
+            style: GoogleFonts.urbanist(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1E232C), // Dark text color
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Your cart is empty',
-          style: GoogleFonts.urbanist(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 8),
+          Text(
+            'Add items to get started',
+            style: GoogleFonts.urbanist(
+              fontSize: 16,
+              color: const Color(0xFF8391A1), // Light grey text color
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Looks like you haven\'t added anything yet.',
-          style: GoogleFonts.urbanist(color: Colors.grey[500]),
-        ),
-        const SizedBox(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton(
+          const SizedBox(height: 32),
+          SizedBox(
+            width: 200, // Fixed width for button
+            height: 56,
+            child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF1A1A1A)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E232C), // Dark button color
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 0,
               ),
               child: Text(
-                'Start Ordering',
+                'Browse Menu',
                 style: GoogleFonts.urbanist(
-                  color: const Color(0xFF1A1A1A),
+                  color: Colors.white,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

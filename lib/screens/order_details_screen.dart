@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:convert';
 import '../models/order_model.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
@@ -37,7 +38,7 @@ class OrderDetailsScreen extends StatelessWidget {
                   children: [
                     // Order ID
                     Text(
-                      order.id,
+                      'Order #${order.orderId}',
                       style: GoogleFonts.urbanist(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -55,30 +56,62 @@ class OrderDetailsScreen extends StatelessWidget {
                     const SizedBox(height: 30),
 
                     // QR Code
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey[300]!),
+                    // QR Code
+                    // Only show if NOT completed, NOT pending, and NOT cancelled
+                    if (order.status.toLowerCase() != 'completed' &&
+                        order.status.toLowerCase() != 'pending' &&
+                        order.status.toLowerCase() != 'cancelled')
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: order.qrCode != null && order.qrCode!.isNotEmpty
+                            ? SizedBox(
+                                width: 180,
+                                height: 180,
+                                child: Image.memory(
+                                  base64Decode(
+                                    order.qrCode!.replaceFirst(
+                                      RegExp(r'data:image\/.*;base64,'),
+                                      '',
+                                    ),
+                                  ),
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(Icons.error),
+                                    );
+                                  },
+                                ),
+                              )
+                            : QrImageView(
+                                data: order.id,
+                                version: QrVersions.auto,
+                                size: 180,
+                                backgroundColor: Colors.white,
+                              ),
                       ),
-                      child: QrImageView(
-                        data: order.id,
-                        version: QrVersions.auto,
-                        size: 180,
-                        backgroundColor: Colors.white,
+                    if (order.status.toLowerCase() != 'completed' &&
+                        order.status.toLowerCase() != 'pending' &&
+                        order.status.toLowerCase() != 'cancelled')
+                      const SizedBox(height: 12),
+                    if (order.status.toLowerCase() != 'completed' &&
+                        order.status.toLowerCase() != 'pending' &&
+                        order.status.toLowerCase() != 'cancelled')
+                      Text(
+                        'Show this QR code at the counter for pickup',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.urbanist(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Show this QR code at the counter for pickup',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.urbanist(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
+                    if (order.status.toLowerCase() != 'completed' &&
+                        order.status.toLowerCase() != 'pending' &&
+                        order.status.toLowerCase() != 'cancelled')
+                      const SizedBox(height: 30),
 
                     // Status Indicator
                     Container(
@@ -251,26 +284,38 @@ class OrderDetailsScreen extends StatelessWidget {
 
   String _formatDate(String dateStr) {
     try {
-      final date = DateTime.parse(dateStr);
+      // Force UTC interpretation if missing offset
+      if (!dateStr.endsWith('Z') && !dateStr.contains('+')) {
+        dateStr += 'Z';
+      }
+      final date = DateTime.parse(dateStr).toLocal();
+      // Match format from OrdersScreen: "MMM dd, h:mm a"
+      // Note: Needs 'package:intl/intl.dart' which should be imported
+      // If intl is not imported in this file, I'll need to add it or write custom formatter matching it.
+      // Based on previous file, I'll use DateFormat if available, otherwise manual.
+      // Let's use manual for safety if import is missing, but matching the style.
+
       final months = [
-        'January',
-        'February',
-        'March',
-        'April',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
         'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       final hour = date.hour > 12
           ? date.hour - 12
           : (date.hour == 0 ? 12 : date.hour);
       final period = date.hour >= 12 ? 'PM' : 'AM';
-      return '${months[date.month - 1]} ${date.day}, ${date.year} at $hour:${date.minute.toString().padLeft(2, '0')} $period';
+      final minute = date.minute.toString().padLeft(2, '0');
+
+      return '${months[date.month - 1]} ${date.day}, $hour:$minute $period';
     } catch (e) {
       return dateStr;
     }
@@ -281,6 +326,7 @@ class OrderDetailsScreen extends StatelessWidget {
       case 'pending':
         return 'Payment Pending';
       case 'paid':
+        return 'Paid';
       case 'preparing':
         return 'Cooking in Progress';
       case 'ready':

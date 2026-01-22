@@ -40,6 +40,10 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
       return false;
     }
   }
+
+  void clearOrders() {
+    state = OrdersState();
+  }
 }
 
 final ordersProvider = StateNotifierProvider<OrdersNotifier, OrdersState>((
