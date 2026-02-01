@@ -38,6 +38,7 @@ class MenuItemCard extends ConsumerWidget {
           onTap: isOutOfStock ? null : () {},
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Image Section
               Stack(
@@ -58,7 +59,7 @@ class MenuItemCard extends ConsumerWidget {
                       image: !isOutOfStock
                           ? const DecorationImage(
                               image: AssetImage(
-                                'assets/images/all-menu-item.avif',
+                                'assets/images/all-menu-item.png',
                               ),
                               fit: BoxFit.cover,
                             )
@@ -82,66 +83,65 @@ class MenuItemCard extends ConsumerWidget {
               ),
 
               // Content Section
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  10,
-                  10,
-                  10,
-                  0,
-                ), // Outer bottom padding 0
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Item Name
-                    Text(
-                      item.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.urbanist(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        height: 1.2,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Price and Quantity Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Price
-                        Text(
-                          '₹${item.price.toInt()}',
-                          style: GoogleFonts.urbanist(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: const Color(0xFF0B7D3B), // Green color
-                          ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Item Name
+                      Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.urbanist(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          height: 1.2,
                         ),
-                        // Available Quantity
-                        if (!isOutOfStock)
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // Price and Quantity Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Price
                           Text(
-                            '${item.availableQuantity} Left',
+                            '₹${item.price.toInt()}',
                             style: GoogleFonts.urbanist(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: const Color(0xFF0B7D3B), // Green color
                             ),
                           ),
-                      ],
-                    ),
+                          // Available Quantity
+                          if (!isOutOfStock)
+                            Text(
+                              '${item.availableQuantity} Left',
+                              style: GoogleFonts.urbanist(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                        ],
+                      ),
 
-                    const SizedBox(height: 4), // Reduced space above button
-                    // Action Button
-                    _buildActionButton(
-                      context,
-                      ref,
-                      quantity,
-                      isOutOfStock,
-                      isMaxQuantity,
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      const Spacer(),
+                      // Action Button
+                      _buildActionButton(
+                        context,
+                        ref,
+                        quantity,
+                        isOutOfStock,
+                        isMaxQuantity,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
