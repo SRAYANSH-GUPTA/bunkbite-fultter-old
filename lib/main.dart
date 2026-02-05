@@ -21,7 +21,7 @@ class BunkBiteApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: AppConstants.scaffoldMessengerKey,
       theme: _buildTheme(Brightness.light),
-      home: const LaunchScreen(),
+      home: SafeArea(child: const LaunchScreen()),
     );
   }
 

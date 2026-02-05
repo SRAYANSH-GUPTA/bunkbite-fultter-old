@@ -15,7 +15,7 @@ class CustomNavBar extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 5, left: 24, right: 24),
+        // margin: const EdgeInsets.only(bottom: 5, left: 24, right: 24),
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A1A),

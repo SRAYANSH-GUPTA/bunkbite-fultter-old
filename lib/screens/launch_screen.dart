@@ -222,7 +222,7 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
                       color: Colors.grey[600],
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
                   // Get Started Button
                   SizedBox(
                     width: double.infinity,
@@ -246,7 +246,7 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),

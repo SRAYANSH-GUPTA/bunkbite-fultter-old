@@ -1,0 +1,123 @@
+name: Deploy Patch via shorebird
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version to patch (e.g., 1.0.3)'
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1  # CHANGED: Only fetch latest commit to save space and time
+          token: ${{ secrets.GITHUB_TOKEN }}
+     
+      - name: Set variables
+        id: vars
+        run: |
+          echo "action_type=patch" >> $GITHUB_OUTPUT
+          echo "version_name=${{ github.event.inputs.release_version }}" >> $GITHUB_OUTPUT
+          echo "version_code=$(echo ${{ github.event.inputs.release_version }} | tr -d .)" >> $GITHUB_OUTPUT
+          echo "deploy_to_store=false" >> $GITHUB_OUTPUT
+        shell: bash
+      
+      # Clean up before starting
+      - name: Clean up workspace
+        run: |
+          echo "🧹 Cleaning up old builds..."
+          rm -rf build/
+          rm -rf .dart_tool/
+          rm -rf android/app/build/
+          rm -rf android/.gradle/
+          
+      - name: Decrypt Keystore
+        run: |
+          cd android/app
+          gpg -d --passphrase "${{ secrets.GPG_PASS }}" --batch release.keystore.asc > release.keystore
+      
+      - name: Decrypt key.properties
+        run: |
+          cd android
+          gpg -d --passphrase "${{ secrets.GPG_PASS }}" --batch key.properties.asc > key.properties
+      
+      - name: Create version.properties
+        run: |
+          cd android
+          echo "flutter.versionName=${{ steps.vars.outputs.version_name }}" > version.properties
+          echo "flutter.versionCode=${{ steps.vars.outputs.version_code }}" >> version.properties
+      
+      - name: Setup Java 17
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk
+          java -version
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: false  # CHANGED: Disable cache to prevent storage bloat
+          
+      # Limited Gradle cache with size constraints
+      - name: Cache Gradle (Limited)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1  # Fail fast if cache is slow
+      
+      # Clean Gradle cache if it gets too large
+      - name: Clean old Gradle caches
+        run: |
+          echo "🧹 Cleaning old Gradle caches..."
+          find ~/.gradle/caches/ -type f -atime +7 -delete 2>/dev/null || true
+          find ~/.gradle/caches/ -type d -empty -delete 2>/dev/null || true
+          du -sh ~/.gradle/caches/ || true
+      
+      - name: Build Shorebird Patch
+        run: |
+          export PATH="$HOME/.config/shorebird/bin:$PATH"
+          echo "🔧 Creating Shorebird PATCH for version ${{ steps.vars.outputs.version_name }}"
+          shorebird patch android --flavor prod --no-confirm --release-version=${{ steps.vars.outputs.version_name }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SB_CI_TOKEN }}
+      
+      # Post-build cleanup
+      - name: Cleanup after build
+        if: always()
+        run: |
+          echo "🧹 Post-build cleanup..."
+          rm -rf build/
+          rm -rf .dart_tool/
+          rm -rf android/app/build/
+          rm -rf android/.gradle/
+          
+          # Clean Flutter cache
+          flutter clean || true
+          
+          # Clean old Shorebird artifacts (keep only last 3 patches)
+          if [ -d "$HOME/.shorebird" ]; then
+            find $HOME/.shorebird -type f -name "*.patch" -mtime +7 -delete 2>/dev/null || true
+          fi
+          
+          # Show remaining space
+          echo "📊 Disk usage after cleanup:"
+          df -h /

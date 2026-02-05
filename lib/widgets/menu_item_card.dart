@@ -44,7 +44,7 @@ class MenuItemCard extends ConsumerWidget {
               Stack(
                 children: [
                   Container(
-                    height: 140,
+                    height: 110,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: isOutOfStock
